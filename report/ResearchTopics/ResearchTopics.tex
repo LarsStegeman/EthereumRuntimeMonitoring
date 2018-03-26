@@ -1,0 +1,69 @@
+\documentclass[a4paper]{article}
+
+%% Language and font encodings
+\usepackage[english]{babel}
+\usepackage[utf8x]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{hyperref}
+
+%% Sets page size and margins
+\usepackage[a4paper,top=3cm,bottom=2cm,left=3cm,right=3cm,marginparwidth=1.75cm]{geometry}
+
+%% Useful packages
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{url}
+\usepackage{listings}
+
+
+\title{Runtime Monitoring of Smart Contracts \\
+\large On the Ethereum network \\}
+
+\author{Lars Stegeman [s1346466]\\ l.stegeman@student.utwente.nl}
+
+\begin{document}
+\maketitle
+
+\tableofcontents
+
+
+\section{Introduction}
+
+\section{Background}
+The Ethereum platform is built upon a distributed public ledger . On this ledger the cryptocurrency ether is stored. It is opposed to Bitcoin based on an account based system and not unspend transaction output. There are two types of accounts, one is a default account in which a user controls the spending of funds through its private keys. These accounts are called "Externally owned Accounts". The other option is a "Contract Account', which means that it is managed by code only. The code is set when the contract is constructed and initialised on the blockchain. Contract accounts only execute code when they are called from other contracts. Each contract has a persistent storage which is also maintained on the blockchain. This means that the Ethereum blockchain consists of two parts. The first part is the transaction history and the other part is the storage of all the deployed smart contracts combined. Transactions are the only entity that make changes to the storage. At an higher level overview we could see the Ethereum network as a large state machine in which changes to the state are controlled by transactions. Transactions are grouped in blocks and these blocks are distributed over the network and validated by each node. 
+\subsection{Smart Contracts}
+Smart Contracts on the Ethereum network consist of two parts. Each contract has a set of functions and a storage. The contract set of functions is defined by the contract code that is deployed with the contract. This contract code is EVM bytecode and is usually compiled from a higher level programming language. When the contract is created the storage is initially empty. Only the contract code can make changes and add data to the presistent storage, within this storage the state of the contract is maintained. Each new function call has an empty memory, this can also be used to store data. But this data is not presistent through transactions, it is only persistent within the transaction. There are also so called "logs", this storage can only be used to store data and not retrieve. This storage is usually used to provide data for the external world because it can be searched efficiently.\\
+Functions are only executed when they are called by external contracts. For example if a fund is to be released after a certain amount of time (block number higher then a certain amount). These funds will not be automatically transferred once the time treshold is reached, they will only be released when the function is called again.\\
+
+
+\subsection{EVM}
+\subsection{Solidity/Bamboo/Vyper}
+Smart contracts are usually written in a language that compiles to EVM (Ethereum Virtual Machine) bytecode. Currently the best known and most used language is Solidity. But there are other options available that compile to the same EVM. They differ in their syntax and influences by other languages.  
+\begin{itemize}
+\item Solidity \url{http://solidity.readthedocs.io/en/latest/} is a contract oriented, high-level language for implementing smart contracts. Solidity is statically typed and supports inheritance. Its syntax is influenced by Javascript.
+\item Bamboo \url{https://github.com/pirapira/bamboo} is a programming language which makes state transitions explicit. This way it avoids reentrancy by default. Instead of having a global state of the contract, contracts morph into new contract by calling functions. This way there should be less suprises in the exeuction of smart contracts.
+\item Vyper \url{https://github.com/ethereum/vyper} is still an experimental programming language. The idea is to limit certain functions and aspects that are possible in Solidity to make writing smart contracts more secure. It also tries to make smart contracts more human readable to make it simpler to see what will happen when a function is called. 
+\end{itemize}
+
+
+\section{Runtime monitoring} 
+
+
+\section{Property specification}
+
+
+\section{Related Work}
+During initial research two runtime verification frameworks were found on Github. Both of them are described in short below. But very little documentation is available for both of them.
+\subsection{LARVA}
+LARVA can be found on github at \url{https://github.com/gordonpace/contractLarva}. From the instructions on the README you can write a specification and a contract in Solidity. The compiler will combine these two and output a new Solidity contract with the runtime verification checks in place. 
+
+\subsection{Ethereuem-runtime-verification}
+This project is located at \url{https://github.com/shaunazzopardi/ethereuem-runtime-verification}. No documentation is avaiable for this project. It mentions the LARVA project in the description in that it differs from LARVA because this runtime-verification tool can dynamically add properties to an already deployed smart contract.
+
+
+
+\section{Planning}
+
+
+
+\end{document}
