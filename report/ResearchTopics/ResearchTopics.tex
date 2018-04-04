@@ -15,6 +15,9 @@
 \usepackage{url}
 \usepackage{listings}
 
+%% Solidity highlighting for listings
+\input{solidity-highlighting.tex}
+
 
 \title{Runtime Monitoring of Smart Contracts \\
 \large On the Ethereum network \\}
@@ -22,6 +25,7 @@
 \author{Lars Stegeman [s1346466]\\ l.stegeman@student.utwente.nl}
 
 \begin{document}
+
 \maketitle
 
 \tableofcontents
@@ -49,74 +53,15 @@ Smart contracts are usually written in a language that compiles to EVM (Ethereum
 
 \section{Example}
 To give an exampe we will use the contract SimpleToken. This contract is not ERC20 compliant, but only allows you to transfer coins. It does not have the approve functionality that ERC20 has. Below we will see the solidity code for SimpleToken.
-\begin{lstlisting}[
-    basicstyle=\small, 
-]
-pragma solidity ^0.4.20;
 
-contract SimpleToken {
-    /* This creates an array with all balances */
-    mapping (address => uint256) public balanceOf;
-	/* TotalSupply is fixed for this token, and does not change. It is assigned in the constructor */
-	uint256 totalSupply;
+\lstinputlisting[language=Solidity]{examples/SimpleToken.sol}
 
-    /* Initializes contract with initial supply tokens to the creator of the contract */
-    function MyToken(
-        uint256 initialSupply
-        ) public {
-        balanceOf[msg.sender] = initialSupply;              // Give the creator all initial tokens
-		totalSupply = initialSupply;
-    }
+This token contract has the minimal functionality that a token contract needs. This however is the implementation of the contract. What is missing is the specification of what should happen during exeuction of the contract. There are a few properties that are important to the functionality of the token contract. One is that the value of \texttt{totalSupply} is always equal to the sum of all the individual balances in the mapping balanceOf. Another property is that when a transfer function is executed the balance of the \texttt{\_to} addres is incremented with the \texttt{\_value}. And the same balance of the sender is decreased with the same value. Or when one of the require clauses fails the state is not changed and the complete balance of mapping remains unchanged. The first property can be seen as an invariant and the second one should be checked after execution of the transfer function.
 
-    /* Send coins */
-    function transfer(address _to, uint256 _value) public {
-        require(balanceOf[msg.sender] >= _value);           // Check if the sender has enough
-        require(balanceOf[_to] + _value >= balanceOf[_to]); // Check for overflows
-        balanceOf[msg.sender] -= _value;                    // Subtract from the sender
-        balanceOf[_to] += _value;                           // Add the same to the recipient
-    }
-}
-\end{lstlisting}
-This token contract has the minimal functionality that a token contract needs. This however is the implementation of the contract. What is missing is the specification of what should happen during exeuction of the contract. There are a few properties that are important to the functionality of the token contract. One is that the value of \texttt{totalSupply} is always equal to the sum of all the individual balances in the mapping balanceOf. Another property is that when a transfer function is executed the balance of the \texttt{\_to} addres is incremented with the \texttt{\_value}. And the same balance of the sender is decreased with the same value. Or when one of the require clauses fails the state is not changed and the complete balance of mapping remains unchanged. The first property can be seen as an invariant and written more formally: \\
- \textbf{@invariant}   \qquad totalSupply ==  sum = (forall x in balanceOf [ sum +=balanceOf[x]])\\
-The other property should be checked after execution of the transfer function: \\
- \textbf{@ensures} \qquad balanceOf[\_to] == \textbackslash old(balanceOf[\_to]) + \_value \&\&\\
-		balanceOf[msg.sender] == \textbackslash old(balanceOf[msg.sender]) - \_value \&\&\\
-		forall x : x != \_to ||  x != msg.sender : balanceOf[x] == \textbackslash old(balanceOf[x]) \\
-		|| \\
-        		forall x: balanceOf[x] == \textbackslash old(balanceOf[x])
+\lstinputlisting[language=Solidity]{examples/SimpleToken.spec.sol}
  
 This together with the solidity code could be compiled to a new smart contract. The compiled smart contract will have the same behaviour but with extra assertions added to the code. A tool would be able to parse specifications and add the correct code to the corresponding functions. For this example we will make the code by hand because the tool still needs to be developed.
-\begin{lstlisting}[
-    basicstyle=\small, 
-]
-pragma solidity ^0.4.20;
 
-contract SimpleToken {
-    /* This creates an array with all balances */
-    mapping (address => uint256) public balanceOf;
-	/* TotalSupply is fixed for this token, and does not change. It is assigned in the constructor */
-	uint256 totalSupply;
-
-    /* Initializes contract with initial supply tokens to the creator of the contract */
-    function MyToken(
-        uint256 initialSupply
-        ) public {
-        balanceOf[msg.sender] = initialSupply;              // Give the creator all initial tokens
-		totalSupply = initialSupply;
-    }
-
-    /* Send coins */
-    function transfer(address _to, uint256 _value) public {
-        require(balanceOf[msg.sender] >= _value);           // Check if the sender has enough
-        require(balanceOf[_to] + _value >= balanceOf[_to]); // Check for overflows
-        balanceOf[msg.sender] -= _value;                    // Subtract from the sender
-        balanceOf[_to] += _value;                           // Add the same to the recipient
-    }
-
-
-}
-\end{lstlisting}
 
 
 \section{Runtime monitoring} 
