@@ -36,6 +36,7 @@ Smart Contracts on the Ethereum network consist of two parts. Each contract has 
 Functions are only executed when they are called by external contracts. For example if a fund is to be released after a certain amount of time (block number higher then a certain amount). These funds will not be automatically transferred once the time treshold is reached, they will only be released when the function is called again.\\
 
 
+
 \subsection{EVM}
 \subsection{Solidity/Bamboo/Vyper}
 Smart contracts are usually written in a language that compiles to EVM (Ethereum Virtual Machine) bytecode. Currently the best known and most used language is Solidity. But there are other options available that compile to the same EVM. They differ in their syntax and influences by other languages.  
@@ -44,6 +45,78 @@ Smart contracts are usually written in a language that compiles to EVM (Ethereum
 \item Bamboo \url{https://github.com/pirapira/bamboo} is a programming language which makes state transitions explicit. This way it avoids reentrancy by default. Instead of having a global state of the contract, contracts morph into new contract by calling functions. This way there should be less suprises in the exeuction of smart contracts.
 \item Vyper \url{https://github.com/ethereum/vyper} is still an experimental programming language. The idea is to limit certain functions and aspects that are possible in Solidity to make writing smart contracts more secure. It also tries to make smart contracts more human readable to make it simpler to see what will happen when a function is called. 
 \end{itemize}
+
+
+\section{Example}
+To give an exampe we will use the contract SimpleToken. This contract is not ERC20 compliant, but only allows you to transfer coins. It does not have the approve functionality that ERC20 has. Below we will see the solidity code for SimpleToken.
+\begin{lstlisting}[
+    basicstyle=\small, 
+]
+pragma solidity ^0.4.20;
+
+contract SimpleToken {
+    /* This creates an array with all balances */
+    mapping (address => uint256) public balanceOf;
+	/* TotalSupply is fixed for this token, and does not change. It is assigned in the constructor */
+	uint256 totalSupply;
+
+    /* Initializes contract with initial supply tokens to the creator of the contract */
+    function MyToken(
+        uint256 initialSupply
+        ) public {
+        balanceOf[msg.sender] = initialSupply;              // Give the creator all initial tokens
+		totalSupply = initialSupply;
+    }
+
+    /* Send coins */
+    function transfer(address _to, uint256 _value) public {
+        require(balanceOf[msg.sender] >= _value);           // Check if the sender has enough
+        require(balanceOf[_to] + _value >= balanceOf[_to]); // Check for overflows
+        balanceOf[msg.sender] -= _value;                    // Subtract from the sender
+        balanceOf[_to] += _value;                           // Add the same to the recipient
+    }
+}
+\end{lstlisting}
+This token contract has the minimal functionality that a token contract needs. This however is the implementation of the contract. What is missing is the specification of what should happen during exeuction of the contract. There are a few properties that are important to the functionality of the token contract. One is that the value of \texttt{totalSupply} is always equal to the sum of all the individual balances in the mapping balanceOf. Another property is that when a transfer function is executed the balance of the \texttt{\_to} addres is incremented with the \texttt{\_value}. And the same balance of the sender is decreased with the same value. Or when one of the require clauses fails the state is not changed and the complete balance of mapping remains unchanged. The first property can be seen as an invariant and written more formally: \\
+ \textbf{@invariant}   \qquad totalSupply ==  sum = (forall x in balanceOf [ sum +=balanceOf[x]])\\
+The other property should be checked after execution of the transfer function: \\
+ \textbf{@ensures} \qquad balanceOf[\_to] == \textbackslash old(balanceOf[\_to]) + \_value \&\&\\
+		balanceOf[msg.sender] == \textbackslash old(balanceOf[msg.sender]) - \_value \&\&\\
+		forall x : x != \_to ||  x != msg.sender : balanceOf[x] == \textbackslash old(balanceOf[x]) \\
+		|| \\
+        		forall x: balanceOf[x] == \textbackslash old(balanceOf[x])
+ 
+This together with the solidity code could be compiled to a new smart contract. The compiled smart contract will have the same behaviour but with extra assertions added to the code. A tool would be able to parse specifications and add the correct code to the corresponding functions. For this example we will make the code by hand because the tool still needs to be developed.
+\begin{lstlisting}[
+    basicstyle=\small, 
+]
+pragma solidity ^0.4.20;
+
+contract SimpleToken {
+    /* This creates an array with all balances */
+    mapping (address => uint256) public balanceOf;
+	/* TotalSupply is fixed for this token, and does not change. It is assigned in the constructor */
+	uint256 totalSupply;
+
+    /* Initializes contract with initial supply tokens to the creator of the contract */
+    function MyToken(
+        uint256 initialSupply
+        ) public {
+        balanceOf[msg.sender] = initialSupply;              // Give the creator all initial tokens
+		totalSupply = initialSupply;
+    }
+
+    /* Send coins */
+    function transfer(address _to, uint256 _value) public {
+        require(balanceOf[msg.sender] >= _value);           // Check if the sender has enough
+        require(balanceOf[_to] + _value >= balanceOf[_to]); // Check for overflows
+        balanceOf[msg.sender] -= _value;                    // Subtract from the sender
+        balanceOf[_to] += _value;                           // Add the same to the recipient
+    }
+
+
+}
+\end{lstlisting}
 
 
 \section{Runtime monitoring} 
