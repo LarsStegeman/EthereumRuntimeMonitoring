@@ -56,11 +56,13 @@ To give an exampe we will use the contract SimpleToken. This contract is not ERC
 
 \lstinputlisting[language=Solidity]{examples/SimpleToken.sol}
 
-This token contract has the minimal functionality that a token contract needs. This however is the implementation of the contract. What is missing is the specification of what should happen during exeuction of the contract. There are a few properties that are important to the functionality of the token contract. One is that the value of \texttt{totalSupply} is always equal to the sum of all the individual balances in the mapping balanceOf. Another property is that when a transfer function is executed the balance of the \texttt{\_to} addres is incremented with the \texttt{\_value}. And the same balance of the sender is decreased with the same value. Or when one of the require clauses fails the state is not changed and the complete balance of mapping remains unchanged. The first property can be seen as an invariant and the second one should be checked after execution of the transfer function.
+This token contract has the minimal functionality that a token contract needs. This is only the implementation of the token contract. What is missing is the specification of what should happen during execution of the contract. There are a few properties that are important to the functionality of the token contract. One is that the value of \texttt{totalSupply} is always equal to the sum of all the individual balances in the mapping \texttt{balanceOf}. Another property is that when a transfer function is executed the balance of the \texttt{\_to} address is incremented with the \texttt{\_value}. And the balance of the sender is decreased with the same value. Or when one of the require clauses within the transfer function body  fails the state is not changed and the complete balance of mapping remains unchanged. The first property can be seen as an invariant and the second one should be checked after execution of the transfer function.
 
 \lstinputlisting[language=Solidity]{examples/SimpleToken.spec.sol}
  
-This together with the solidity code could be compiled to a new smart contract. The compiled smart contract will have the same behaviour but with extra assertions added to the code. A tool would be able to parse specifications and add the correct code to the corresponding functions. For this example we will make the code by hand because the tool still needs to be developed.
+This specification together with the solidity code could be compiled to a new smart contract. The compiled smart contract will have the same behaviour but with extra assertions added to the code. The tool should be able to parse specifications and add the correct code to the corresponding functions. For this example we will make the code by hand because the tool still needs to be developed.
+
+\lstinputlisting[language=Solidity]{examples/RuntimeMonitoredSimpleToken.sol}
 
 
 
