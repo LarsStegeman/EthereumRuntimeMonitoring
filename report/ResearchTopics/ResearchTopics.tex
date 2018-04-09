@@ -52,17 +52,29 @@ Smart contracts are usually written in a language that compiles to EVM (Ethereum
 
 
 \section{Example}
-To give an exampe we will use the contract SimpleToken. This contract is not ERC20 compliant, but only allows you to transfer coins. It does not have the approve functionality that ERC20 has. Below we will see the solidity code for SimpleToken.
+In this section a small example will be introduced. This example helps understand the problem this research tries to solve. The tool that will ultimately parse specification is not implemented yet, that is why in this example the specification is translated by hand. First we will introduce the contract and what is it supposed to do. Next we will add the specifications to the contract that we wish to check for during runtime. After that we will look at the code of the runtime monitored contract, which is made by translating the specified properties to Solidity code and adding it to the existing contract. Lastly we will discuss what this means for the contract in terms of gas execution and additional changes that had to be made to the contract.
+
+\subsection{Simple Token}
+In this example we will use the contract SimpleToken. The contract code can be found on the Ethereum Foundation website \footnote{\url{https://www.ethereum.org/token}}. 
+It models a minimum viable token, to keep the state of the contract a \texttt{mapping} is used that maps \texttt{address} to \texttt{uint}. This mapping is kept in the contracts internal storage and is stored on the blockchain. It indicates which addresses holds how much of this contracts token and changes each time the \texttt{transfer} function is called. The \texttt{transfer} function requires two parameters an address (\texttt{\_to})  and an uint(\texttt{\_value}) which specifies the amount to be sent. The from address is determined from the global variable \texttt{msg} which is present in each transaction. When the contract is created the constructor will be called. In this constructor the initialSupply is given as a parameter. All the initial supply is given to the contract creator (\texttt{msg.sender}). The totalSupply value is assigned and cannot be changed after initialisation.\\
+Note that this contract is not ERC20 compliant. ERC20 is the interface that most tokens use to implement the desired functionality. This interface is defined in order for all wallets and exchanges to be able to handle different tokens \footnote{\url{https://github.com/ethereum/EIPs/blob/master/EIPS/eip-20.md}}. The main difference is that this contract does not have an \texttt{approve} mapping which lets users approve a certain transfer of tokens. Also this SimpleToken does not allow \texttt{minting} or \texttt{burning} of tokens, in other words the total supply is fixed. Below we can see the Solidity source code of the contract SimpleToken.
 
 \lstinputlisting[language=Solidity]{examples/SimpleToken.sol}
 
-This token contract has the minimal functionality that a token contract needs. This is only the implementation of the token contract. What is missing is the specification of what should happen during execution of the contract. There are a few properties that are important to the functionality of the token contract. One is that the value of \texttt{totalSupply} is always equal to the sum of all the individual balances in the mapping \texttt{balanceOf}. Another property is that when a transfer function is executed the balance of the \texttt{\_to} address is incremented with the \texttt{\_value}. And the balance of the sender is decreased with the same value. Or when one of the require clauses within the transfer function body  fails the state is not changed and the complete balance of mapping remains unchanged. The first property can be seen as an invariant and the second one should be checked after execution of the transfer function.
+\subsection{Specification}
+The above section describes the implementation of the token contract. However there is also a specification given in words as to what the contract should do. A few properties of this specification can be declared explicitly using pre and postconditions or invariants. These properties are important to the functionality of the contract. Properties could be translated to corresponding Solidity code and added to the contract. This code is executed within each transaction and thus the properties are checked and validated at runtime. \\
+The first property is that the value of \texttt{totalSupply} is always equal to the sum of all the individual balances in the mapping \texttt{balanceOf}. Another property is that when a transfer function is executed the balance of the \texttt{\_to} address is incremented with the \texttt{\_value}. And the balance of the sender is decreased with the same value. The first property can be seen as an invariant of the contract and should hold before and after execution of a function. The second property should be checked after the execution of the transfer function and can be represented as a postcondition on that function. The exact syntax on how to declare these properties is not defined yet. This example will use syntax that is close to the syntax that is used by JML.
 
 \lstinputlisting[language=Solidity]{examples/SimpleToken.spec.sol}
  
-This specification together with the solidity code could be compiled to a new smart contract. The compiled smart contract will have the same behaviour but with extra assertions added to the code. The tool should be able to parse specifications and add the correct code to the corresponding functions. For this example we will make the code by hand because the tool still needs to be developed.
+\subsection{Implementation of RuntimeMonitoredSimpleToken}
+
+This specification together with the solidity code could be compiled to a new smart contract. The compiled smart contract will have the same behaviour but with extra assertions added to the code. The tool should be able to parse specifications and add the correct code to the corresponding functions. For this example the code will be made by hand because the tool still needs to be developed.
 
 \lstinputlisting[language=Solidity]{examples/RuntimeMonitoredSimpleToken.sol}
+
+\subsection{Discussion}
+
 
 
 
@@ -78,7 +90,7 @@ During initial research two runtime verification frameworks were found on Github
 LARVA can be found on github at \url{https://github.com/gordonpace/contractLarva}. From the instructions on the README you can write a specification and a contract in Solidity. The compiler will combine these two and output a new Solidity contract with the runtime verification checks in place. 
 
 \subsection{Ethereuem-runtime-verification}
-This project is located at \url{https://github.com/shaunazzopardi/ethereuem-runtime-verification}. No documentation is avaiable for this project. It mentions the LARVA project in the description in that it differs from LARVA because this runtime-verification tool can dynamically add properties to an already deployed smart contract.
+This project is located at \url{https://github.com/shaunazzopardi/ethereuem-runtime-verification}. No documentation is available for this project. It mentions the LARVA project in the description in that it differs from LARVA because this runtime-verification tool can dynamically add properties to an already deployed smart contract.
 
 
 
