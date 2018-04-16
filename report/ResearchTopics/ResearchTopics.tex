@@ -34,6 +34,8 @@
 \section{Introduction}
 
 \section{Background}
+This section will discuss the background information that will be built upon further in the document. First we will briefly discuss the important parts of the Ethereum Blockchain. Then we will discuss the Smart Contracts in more detail.
+\subsection{The blockchain}
 The Ethereum platform is built upon a distributed public ledger . On this ledger the cryptocurrency ether is stored. It is opposed to Bitcoin based on an account based system and not unspend transaction output. There are two types of accounts, one is a default account in which a user controls the spending of funds through its private keys. These accounts are called "Externally owned Accounts". The other option is a "Contract Account', which means that it is managed by code only. The code is set when the contract is constructed and initialised on the blockchain. Contract accounts only execute code when they are called from other contracts. Each contract has a persistent storage which is also maintained on the blockchain. This means that the Ethereum blockchain consists of two parts. The first part is the transaction history and the other part is the storage of all the deployed smart contracts combined. Transactions are the only entity that make changes to the storage. At an higher level overview we could see the Ethereum network as a large state machine in which changes to the state are controlled by transactions. Transactions are grouped in blocks and these blocks are distributed over the network and validated by each node. 
 \subsection{Smart Contracts}
 Smart Contracts on the Ethereum network consist of two parts. Each contract has a set of functions and a storage. The contract set of functions is defined by the contract code that is deployed with the contract. This contract code is EVM bytecode and is usually compiled from a higher level programming language. When the contract is created the storage is initially empty. Only the contract code can make changes and add data to the presistent storage, within this storage the state of the contract is maintained. Each new function call has an empty memory, this can also be used to store data. But this data is not presistent through transactions, it is only persistent within the transaction. There are also so called "logs", this storage can only be used to store data and not retrieve. This storage is usually used to provide data for the external world because it can be searched efficiently.\\
@@ -42,13 +44,12 @@ Functions are only executed when they are called by external contracts. For exam
 
 
 \subsection{EVM}
-\subsection{Solidity/Bamboo/Vyper}
-Smart contracts are usually written in a language that compiles to EVM (Ethereum Virtual Machine) bytecode. Currently the best known and most used language is Solidity. But there are other options available that compile to the same EVM. They differ in their syntax and influences by other languages.  
-\begin{itemize}
-\item Solidity \url{http://solidity.readthedocs.io/en/latest/} is a contract oriented, high-level language for implementing smart contracts. Solidity is statically typed and supports inheritance. Its syntax is influenced by Javascript.
-\item Bamboo \url{https://github.com/pirapira/bamboo} is a programming language which makes state transitions explicit. This way it avoids reentrancy by default. Instead of having a global state of the contract, contracts morph into new contract by calling functions. This way there should be less suprises in the exeuction of smart contracts.
-\item Vyper \url{https://github.com/ethereum/vyper} is still an experimental programming language. The idea is to limit certain functions and aspects that are possible in Solidity to make writing smart contracts more secure. It also tries to make smart contracts more human readable to make it simpler to see what will happen when a function is called. 
-\end{itemize}
+
+\section{Solidity}
+\label{sec:solidity}
+The most used language to develop contracts on Ethereum is Solidity. In this section we will formally define the syntax and semantics of the language.
+
+
 
 
 \section{Example}
@@ -87,12 +88,28 @@ Lastly because of additional checks the gas cost for each function is not consta
 
 
 \section{Related Work}
-During initial research two runtime verification frameworks were found on Github. Both of them are described in short below. But very little documentation is available for both of them.
-\subsection{LARVA}
-LARVA can be found on github at \url{https://github.com/gordonpace/contractLarva}. From the instructions on the README you can write a specification and a contract in Solidity. The compiler will combine these two and output a new Solidity contract with the runtime verification checks in place. 
+There is a lot of work related to this topic. There are papers discussing the verification of smart contracts. They can be catagorised as static analysis or formal verification. Additionally other contract languages have been proposed to help writing secure smart contracts. The last subsection discusses some other related work.
+\subsection{Smart Contract Verification}
 
-\subsection{Ethereuem-runtime-verification}
+\subsection{Smart Contract Languages}
+Smart contracts are usually written in a high level language that compiles to EVM (Ethereum Virtual Machine) bytecode. Currently the best known and most used language is Solidity (as described in detail in section \ref{sec:solidity}). But there are other options available that compile to the same EVM. They differ in their syntax and influences by other languages.  
+\subsubsection{Bamboo}
+Bamboo is a morphing smart contract language. State transitions the core part of the language design. This makes the state transitions in smart contracts explicit. This way it avoids reentrancy by default. Instead of having a global state of the contract, contracts morph into a new contract by calling functions. This way there should be less suprises in the execution of smart contracts. The project is located in a repository located at \url{https://github.com/pirapira/bamboo}. 
+\subsubsection{Vyper}
+Vyper \url{https://github.com/ethereum/vyper} is still an experimental programming language. The idea is to limit certain functions and aspects that are possible in Solidity to make writing smart contracts more secure. It also tries to make smart contracts more human readable to make it simpler to see what will happen when a function is called. 
+
+\subsection{Other related work}
+A number of other proposals have been published which try to make smart contracts more secure. They do not belong to a certain category but are related to the current work. Some projects only have source code available and do not have documentation or a paper.
+\subsubsection{ContractLARVA}
+ContractLARVA can be found on github at \url{https://github.com/gordonpace/contractLarva}. Following the instructions on the README you can write a specification and a contract in Solidity. The compiler will combine these two and output a new Solidity contract with the runtime verification checks in place. Properties have to be specified using \textit{dynamic event automata} (DEA) \cite{CGG08FMICS}. The tool is based on a similar tool called LARVA for Java. 
+
+\subsubsection{Ethereuem-runtime-verification}
 This project is located at \url{https://github.com/shaunazzopardi/ethereuem-runtime-verification}. No documentation is available for this project. It mentions the LARVA project in the description in that it differs from LARVA because this runtime-verification tool can dynamically add properties to an already deployed smart contract.
+
+\subsubsection{The Hydra Project}
+The Hydra Framework is a project for smart contracts on the Ethereum network. It tries to make smart contracts more secure by making multiple implementations of the same contract. They call this \textit{N-of-N-version programming}. The different implementations are controlled by a meta contract which forwards the incoming calls to all the implementations. If the implementations do not agree on a single answer, the meta contract will be able to react on this. When such a vulnerability is found a bounty is given to the person who exploited the vulnerability. They call this principle \textit{the exploit gap}, this means that a hacker should claim the bounty instead of exploiting the vulnerability. More information can be found in their paper \cite{breidenbachenter}. 
+
+
 
 
 
@@ -100,4 +117,6 @@ This project is located at \url{https://github.com/shaunazzopardi/ethereuem-runt
 
 
 
+\bibliographystyle{IEEEtran}
+\bibliography{IEEEfull,references}
 \end{document}
