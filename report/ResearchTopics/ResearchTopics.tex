@@ -68,12 +68,14 @@ Many smart contracts are deployed to the Ethereum main network every day. When a
 \label{sec:solidity}
 The most used language to develop contracts on Ethereum is Solidity \cite{solidityreadthedocs}. Solidity comes with a compiler that compiles Solidity code into EVM bytecode. This bytecode is what is executed and put on the blockchain. Solidity has features like control flow, types and different storage constructions. Additionally it has some global variables that apply only to the blockchain setting. In this section we will further introduce the language in detail.
 \subsection{Syntax}
-The syntax that is used by Solidity is heavily inspired by Javascript. Solidity is in contrast to Javascript strongly typed. It offers the common types in normal programming languages like; booleans, integers, strings, fixed point numbers,  
-Solidity offers the following storage constructions:
+The syntax that is used by Solidity is heavily inspired by Javascript. Solidity is in contrast to Javascript strongly typed. It offers the common types in normal programming languages like; booleans, integers, strings, fixed point numbers. Since each contract is executed on the blockchain storage is extremely costly in terms of gas cost. This is why many different sizes for integers exist: \texttt{uint8}, \texttt{int8}, \texttt{uint16}, until \texttt{uint256} and \texttt{int256}. \\
+Solidity offers a number of different options for more complex types. These complex types have an extra annotation that defines their storage location. This can either be \texttt{storage} or \texttt{memory}. 
 \begin{itemize}
-    \item Mapping (type)
+    \item Structs are a form to create new types in Solidity. Structs can contain any type including mappings except itself.  
+    \item Arrays can be defined in memory or storage. Storage arrays can hold arbitrary types, memory arrays can not contain mappings. Storage arrays can be dynamically increased in size, however memory arrays are always fixed length.  
+    \item Mappings can only be defined in storage. They map a key of a certain type to a value of another type. They can be compared to hash tables in normal programming languages. However the key set of a mapping is not stored, this makes mappings not iterable. 
 \end{itemize}
-\
+
 \subsection{Structure}
 In Solidity contracts are treated like objects in Object Oriented Programming languages. Contracts can contain state variables and functions and inheritance is supported between multiple contracts. A contract can have a constructor which will be called upon creation of the contract on the blockchain. 
 \subsection{Blockchain specific variables}
