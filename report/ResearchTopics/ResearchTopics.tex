@@ -68,7 +68,7 @@ Many smart contracts are deployed to the Ethereum main network every day. When a
 \label{sec:solidity}
 The most used language to develop contracts on Ethereum is Solidity \cite{solidityreadthedocs}. Solidity comes with a compiler that compiles Solidity code into EVM bytecode. This bytecode is what is executed and put on the blockchain. Solidity has features like control flow, types and different storage constructions. Additionally it has some global variables that apply only to the blockchain setting. In this section we will further introduce the language in detail.
 \subsection{Syntax}
-The syntax that is used by Solidity is heavily inspired by Javascript. Solidity is in contrast to Javascript strongly typed. It offers the common types in normal programming languages like; booleans, integers, strings, fixed point numbers. Since each contract is executed on the blockchain storage is extremely costly in terms of gas cost. This is why many different sizes for integers exist: \texttt{uint8}, \texttt{int8}, \texttt{uint16}, until \texttt{uint256} and \texttt{int256}. \\
+The syntax that is used by Solidity is heavily inspired by Javascript. Solidity is in contrast to Javascript strongly typed. It offers the common types in normal programming languages like; booleans, integers, strings, fixed point numbers. Since each contract is executed on the blockchain, storage is extremely costly in terms of gas cost. This is why many different sizes for integers exist: \texttt{uint8}, \texttt{int8}, \texttt{uint16}, until \texttt{uint256} and \texttt{int256}. \\
 Solidity offers a number of different options for more complex types. These complex types have an extra annotation that defines their storage location. This can either be \texttt{storage} or \texttt{memory}. 
 \begin{itemize}
     \item Structs are a form to create new types in Solidity. Structs can contain any type including mappings except itself.  
@@ -77,11 +77,75 @@ Solidity offers a number of different options for more complex types. These comp
 \end{itemize}
 
 \subsection{Structure}
-In Solidity contracts are treated like objects in Object Oriented Programming languages. Contracts can contain state variables and functions and inheritance is supported between multiple contracts. A contract can have a constructor which will be called upon creation of the contract on the blockchain. 
+In Solidity contracts are treated like objects in Object Oriented Programming languages. Contracts can contain state variables and functions and inheritance is supported between multiple contracts. A contract can have a constructor which will be called upon creation of the contract on the blockchain. In the code example below a simple contract is shown with the basic structure.
+\begin{lstlisting}[
+    language=Solidity
+]
+pragma solidity ^0.4.23;
+
+contract SimpleStorage {
+    uint public storedData; // State variable
+    
+    //Constructor will be called upon creation on blockchain.
+    constructor(uint data){ 
+        storedData = data;
+    }
+    
+    function setData(uint data) public{
+        storedData = data;
+    }
+    function() payable{
+        //Unnamed function will be called if no function signature matches
+    }
+}
+\end{lstlisting}
+Solidity also has different visibility keywords. Their behaviour is a bit different from normal programming languages since it is executed on a blockchain setting. Visibility can be defined for functions and variables.
+\begin{itemize}
+    \item \texttt{external}: External can only be used by functions and means that they can not be called from internal functions. They can be called from other contracts.
+    \item \texttt{public}: Public can be used for functions and state variables. For functions it means that it can be called both internal and external. For state variables it means that a getter function is automatically generated.
+    \item \texttt{internal}: Internal functions and state variables can only be accessed internally from within the current contract and derived contracts.
+    \item \texttt{private}: Private functions and state variables are only visible to the contract they are defined in.
+\end{itemize}
+The extra keywords are used because different functionality can be desired by contracts. Also note that private variables can be read outside of the EVM by inspecting the storage of the smart contract.\\
+Solidity also gives the possibility to define function modifiers. These are usually used to check a condition before execution of a function. Modifiers can be inherited from other contracts and reused in functions on that contract. The modifiers work in a declarative way, and can not change state or variables. As explained in the previous section the Ethereum blockchain has another type of storage called "logs".  Logs are read only and can be written to using \texttt{Events}. Events have to be defined in the contract itself and can be inherited, events can have specified parameters to emit the correct information. Below is a Solidity code snippet showing the basic behaviour of both constructions.
+\begin{lstlisting}[
+    language=Solidity
+]
+pragma solidity ^0.4.23;
+
+contract myContract {
+    uint public data; 
+    
+    //Event declaration
+    event dataIncreased(address sender, uint amount);
+    
+    //Modifier declaration
+    modifier onlyPositive(uint number){
+        require(number >  0);
+        _;
+    }
+    
+    //Before function call check modifier onlyPositive
+    function increment(uint number) onlyPositive(number) public{
+        data +=number;
+        //Emit event dataIncreased
+        emit dataIncreased(msg.sender,number);
+    }
+} 
+\end{lstlisting}
+
 \subsection{Blockchain specific variables}
-
-
-
+What makes Solidity special in terms of programming languages is that it is executed on the blockchain. All code is executed because of the transactions that are being sent to the network. These transactions can be seen as rich function calls with extra information. This extra information is available in special constructed variables which are globally accessible during execution of the contract.\\
+There are two objects that contain information about the blockchain these are: \texttt{block} and \texttt{msg}. The block object contains variables like \texttt{block.number}, \texttt{block.timestamp}, \texttt{block.difficulty} and \texttt{block.coinbase} (current block miner address). The object msg contains information about the current transaction. These are found in variables like: \texttt{msg.gas} (remaining gas), \texttt{msg.value} (value send in wei) and \texttt{msg.sender} (address of the sender).
+The \texttt{address} object is used for communication between contracts. This makes it possible to execute code of multiple contracts within a single transaction. The keyword \texttt{this} refers to the address object of the current contract. This also contains the balance of the contract under the variable \texttt{<address>.balance}. There are five different flavors of calling other contracts.
+\begin{itemize}
+    \item \texttt{<address>.transfer(uint256 amount)}: forwards given amount in wei to address, throws on failure. The function sends 2300 gas with the transfer. 
+    \item \texttt{<address>.send(uint256 amount) returns (bool)}: same behaviour as transfer but returns false on failure.
+    \item \texttt{<address>.call(...) returns (bool)}: forwards all gas to function call. Returns false on failure.
+    \item \texttt{<address>.delegatecall(...) returns (bool)}: same behaviour as call but storage and state variables of original contract are used. This makes it possible to create library functionality within the blockchain.
+    \item \texttt{<address>.callcode(...) returns (bool)}: older version of delegatecall. Usage is discouraged and will be removed in the future.
+\end{itemize}
+All these transfer functions can be sent to "Externally Owned Contracts", but also on "Contract Accounts". This means that arbitrary code can be executed when invoking one of these methods. This is why it is important to specify the amount of gas to be send with the transfer.
 
 \section{Example}
 \label{sec:example}
