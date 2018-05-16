@@ -78,7 +78,8 @@ contract RuntimeMonitoredSimpleToken {
 				exp3 == (balanceOf[addressesInUse[x]] == _old_balanceOf[x].balance);
 			}
 		}
-		assert(exp1 && exp2 && exp3);
+		bool exp4 = msg.sender == _to;
+		assert( (exp1 && exp2 && exp3 && !exp4) || exp4);
 	}
 
 	function invariant() private{
