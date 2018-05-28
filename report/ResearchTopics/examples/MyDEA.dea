@@ -1,0 +1,11 @@
+monitor myContract{
+    DEA testMonitor {
+        states {
+            State: initial;
+            
+        }
+        transitions {
+            State -[number@( number > 0)]-> State;
+        }
+    }
+}
