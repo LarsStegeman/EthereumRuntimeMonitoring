@@ -14,13 +14,14 @@
 \usepackage{graphicx}
 \usepackage{url}
 \usepackage{listings}
+\usepackage{enumitem}
 
 %% Solidity highlighting for listings
 \input{solidity-highlighting.tex}
 
 
 \title{Runtime Verification of Smart Contracts \\
-\large On the Ethereum network [DRAFT] \\}
+\large On the Ethereum network \\}
 
 \author{Lars Stegeman [s1346466]\\ l.stegeman@student.utwente.nl}
 
@@ -278,7 +279,8 @@ Chatterjee et al. \cite{chatterjee2018quantitative} analyse the utility (expecte
 
 
 \section{Final Project}
-This document serves as a starting point for the Final Project. The result of this are a research questions that will be answered during the development of the tool in the Final Project. The project can be seen in three different steps that have to be taken.
+This document serves as a starting point for the Final Project. This paper describes the requirements and related work of a concept tool that is to be developed in the Final Project. The tool will make it possible to write specifications at the same level of Solidity code. These specifications will then be parsed and can be used for a number of different analyses. For example they can be added as extra checks in the code, which is called runtime verification. Writing the specification at the level of Solidity code helps understanding the problem. It can also be used to generate code that other tools can use for formal verification as mentioned in Section \ref{sec:RelatedWork}. \\
+The result of this are a research questions that will be answered during the development of the tool in the Final Project. The project can be seen in three different steps that have to be taken.
 \begin{enumerate}
     \item \textbf{Property specification/definition.}
     The first step is to decide and analyse which properties should be able to be checked and specified. Properties should make sense and should be able to be checked within Solidity. This raises the question:
@@ -288,6 +290,38 @@ This document serves as a starting point for the Final Project. The result of th
     \item \textbf{Tool usage on smart contract.}
     The last step is to test the tool on real world smart contract. And see if it can detect vulnerabilities that would otherwise have not been found. \textit{How can the tool be used to detect vulnerabilities in smart contracts?}.
 \end{enumerate}
+
+\subsection{Tasks and Planning}
+To answer each question different steps have to be taken. For the planning see the diagram below. 
+\begin{enumerate}
+    \item Property specification 
+    \begin{enumerate}[label*=\arabic*.] 
+        \item Decide on technique/tool. There are multiple options to implement a parser. One of the solutions is to extend the Solidity compiler which is open source on Github \footnote{https://github.com/ethereum/solidity}. Another solution is to use the ANTLR based grammar which is kept up to date independently \footnote{https://github.com/solidityj/solidity-antlr4}. 
+        \item Extend Grammar. The grammar has to be extended to accept the specifications that should be inserted into the contracts. It should be able to parse the extended annotations.
+        \item Design. Design the architecture for the parser and validator. The parser can be generated from the grammar automatically. But the specification has to be validated. For example the identifiers that are used must be present in the contract and only for all constructs can be used on arrays.
+        \item Implementation. Implement the property specification and syntax validation in the technique that was chosen in task 1.
+    \end{enumerate}
+    \item Tool output 
+    \begin{enumerate}[label*=\arabic*.] 
+        \item Design. Output of the previous step is a parsed and valid specification. Next step is generate the runtime verification code. First we need to decide how to implement this functionality.
+        \item Implementation.
+    \end{enumerate}
+    \item Tool Analysis 
+    \begin{enumerate}[label*=\arabic*.] 
+        \item Examples. To test the tool examples of smart contracts are needed. These should then be annotated with additional properties and then be passed on through the tool. 
+        \item Gas Analysis. One thing to analyse is the extra gas usage the extra checks use and compare it to the gas cost of the base contract.
+        \item Other analysis tools. Other analysis can be done with the specifications. A few of them are mentioned during the introduction, but they could be used to generate code that can be used for a formal verification tool. This means that the solution must be easily extensible.
+    \end{enumerate}
+    \item Project 
+    \begin{enumerate}[label*=\arabic*.] 
+        \item Report. The report should be updated throughout the project. If a certain task is completed the report should be updated as well. 
+        \item Final Presentation. 
+    \end{enumerate}
+\end{enumerate}
+    
+\begin{center}
+    \includegraphics[angle =90]{resources/Planning.png}
+\end{center}
 
 
 \bibliographystyle{IEEEtran}
