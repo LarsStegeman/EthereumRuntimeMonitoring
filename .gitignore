@@ -12,3 +12,4 @@ settings.json
 .settings
 .classpath
 .project
+target/
