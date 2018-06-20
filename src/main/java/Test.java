@@ -7,8 +7,8 @@ import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.TokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
 
-import generated.SolidityLexer;
-import generated.SolidityParser;
+import generated.SolidityAnnotatedLexer;
+import generated.SolidityAnnotatedParser;
 
 class Test{
     public static void main(String[] args){
@@ -19,19 +19,18 @@ class Test{
 		}else{
 			try{
 				CharStream stream = CharStreams.fromFileName(file.getPath());
-				SolidityLexer lexer = new SolidityLexer(stream);
+				SolidityAnnotatedLexer lexer = new SolidityAnnotatedLexer(stream);
 				TokenStream tokens = new CommonTokenStream(lexer);
-				SolidityParser parser = new SolidityParser(tokens);
+				SolidityAnnotatedParser parser = new SolidityAnnotatedParser(tokens);
 				ParseTree result = parser.sourceUnit();
 				CustomSolidityVisitor visitor = new CustomSolidityVisitor(result);
-
+				visitor.visit(result);
 				
 			}catch(IOException ex){
 				System.out.println(ex.toString());
 			}
 
 
-            //SolidityParser parser = new SolidityParser(lexer);
 
 		}
 
