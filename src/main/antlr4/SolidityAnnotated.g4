@@ -17,7 +17,7 @@ contractPart
   | annotationDefinition ;
 
 annotationDefinition
-  : AnnotationStart AnnotationKind AnnotationQuantifier ;
+  : AnnotationStart AnnotationKind annotationExpression;
 
 
 //Annotation Tokens
@@ -28,13 +28,22 @@ AnnotationKind
   : 'inv'| 'pre'| 'post';
 
 
-AnnotationQuantifier
-  : '\\forall' | '\\exists';
+// Same as the expression rule except it does not include changes, only comparisons
+// Added '->' for then.
+annotationExpression
+  : annotationExpression '&&' annotationExpression
+  | annotationExpression '||' annotationExpression
+  | annotationExpression '->' annotationExpression
+  | annotationExpression ('==' | '!=') annotationExpression
+  | annotationExpression ('>'|'>='|'<'|'<=') annotationExpression
+  | annotationExpression ('+' | '-') annotationExpression
+  | '!'annotationExpression
+  | ('\\forall' | '\\exists') '(' identifier elementaryTypeName ':' annotationExpression? ':' annotationExpression')'
+  | '\\old' '(' identifier ')'
+  | primaryExpression;
 
-AnnotationKeywords
-  : '\\old';
 
-// Remove '@' from LINE_COMMENT token. This means that @ cannot be used anymore.
-// There may be a better solution to only check for @ at the first position.
+
+// Remove '@' from first position of LINE_COMMENT token. 
 LINE_COMMENT 
-  : '//' ~[@\r\n]* -> channel(HIDDEN);
+  : '//' ~[@] ~[\r\n]* -> channel(HIDDEN);
