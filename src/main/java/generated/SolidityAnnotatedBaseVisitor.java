@@ -31,6 +31,13 @@ public class SolidityAnnotatedBaseVisitor<T> extends AbstractParseTreeVisitor<T>
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
+	@Override public T visitAnnotationExpression(SolidityAnnotatedParser.AnnotationExpressionContext ctx) { return visitChildren(ctx); }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation returns the result of calling
+	 * {@link #visitChildren} on {@code ctx}.</p>
+	 */
 	@Override public T visitSourceUnit(SolidityAnnotatedParser.SourceUnitContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}

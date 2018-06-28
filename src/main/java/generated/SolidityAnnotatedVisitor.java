@@ -23,6 +23,12 @@ public interface SolidityAnnotatedVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitAnnotationDefinition(SolidityAnnotatedParser.AnnotationDefinitionContext ctx);
 	/**
+	 * Visit a parse tree produced by {@link SolidityAnnotatedParser#annotationExpression}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitAnnotationExpression(SolidityAnnotatedParser.AnnotationExpressionContext ctx);
+	/**
 	 * Visit a parse tree produced by {@link SolidityAnnotatedParser#sourceUnit}.
 	 * @param ctx the parse tree
 	 * @return the visitor result

@@ -40,6 +40,18 @@ public class SolidityAnnotatedBaseListener implements SolidityAnnotatedListener 
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterAnnotationExpression(SolidityAnnotatedParser.AnnotationExpressionContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitAnnotationExpression(SolidityAnnotatedParser.AnnotationExpressionContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterSourceUnit(SolidityAnnotatedParser.SourceUnitContext ctx) { }
 	/**
 	 * {@inheritDoc}

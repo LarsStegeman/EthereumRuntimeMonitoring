@@ -28,6 +28,16 @@ public interface SolidityAnnotatedListener extends ParseTreeListener {
 	 */
 	void exitAnnotationDefinition(SolidityAnnotatedParser.AnnotationDefinitionContext ctx);
 	/**
+	 * Enter a parse tree produced by {@link SolidityAnnotatedParser#annotationExpression}.
+	 * @param ctx the parse tree
+	 */
+	void enterAnnotationExpression(SolidityAnnotatedParser.AnnotationExpressionContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SolidityAnnotatedParser#annotationExpression}.
+	 * @param ctx the parse tree
+	 */
+	void exitAnnotationExpression(SolidityAnnotatedParser.AnnotationExpressionContext ctx);
+	/**
 	 * Enter a parse tree produced by {@link SolidityAnnotatedParser#sourceUnit}.
 	 * @param ctx the parse tree
 	 */

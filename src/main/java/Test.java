@@ -9,6 +9,9 @@ import org.antlr.v4.runtime.tree.ParseTree;
 
 import generated.SolidityAnnotatedLexer;
 import generated.SolidityAnnotatedParser;
+import validation.IdentifierCollector;
+import validation.TypeChecker;
+import validation.ValidationInformation;
 
 class Test{
     public static void main(String[] args){
@@ -23,8 +26,15 @@ class Test{
 				TokenStream tokens = new CommonTokenStream(lexer);
 				SolidityAnnotatedParser parser = new SolidityAnnotatedParser(tokens);
 				ParseTree result = parser.sourceUnit();
-				CustomSolidityVisitor visitor = new CustomSolidityVisitor(result);
-				visitor.visit(result);
+				//CustomSolidityVisitor visitor = new CustomSolidityVisitor(result);
+				//visitor.visit(result);
+				
+				ValidationInformation infoObj = new ValidationInformation();
+				IdentifierCollector col = new IdentifierCollector(infoObj);
+				col.visit(result);
+				TypeChecker checker = new TypeChecker(infoObj);
+				checker.visit(result);
+
 				
 			}catch(IOException ex){
 				System.out.println(ex.toString());
