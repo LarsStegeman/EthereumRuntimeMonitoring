@@ -50,7 +50,7 @@
         <configuration>
           <mainClass>Test</mainClass>
           <arguments>
-          <argument>SimpleToken.sol</argument>
+          <argument>src/test/contracts/BasicAnnotations.sol</argument>
           </arguments>
         </configuration>
       </plugin>

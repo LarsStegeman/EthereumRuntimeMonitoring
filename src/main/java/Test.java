@@ -10,7 +10,7 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import generated.SolidityAnnotatedLexer;
 import generated.SolidityAnnotatedParser;
 import validation.IdentifierCollector;
-import validation.TypeChecker;
+import validation.AnnotationChecker;
 import validation.ValidationInformation;
 
 class Test{
@@ -32,7 +32,7 @@ class Test{
 				ValidationInformation infoObj = new ValidationInformation();
 				IdentifierCollector col = new IdentifierCollector(infoObj);
 				col.visit(result);
-				TypeChecker checker = new TypeChecker(infoObj);
+				AnnotationChecker checker = new AnnotationChecker(infoObj);
 				checker.visit(result);
 
 				
