@@ -20,17 +20,17 @@ public class ValidationInformation {
         functions.add(new FunctionSignature(name,arguments));
     }
 
-}
-
-class SolidityVariable {
-    String name;
-    String type;
-
-    public SolidityVariable(String name, String type){
-        this.name = name;
-        this.type = type;
+    public SolidityVariable getIdentifier(String identifier){
+        for(SolidityVariable var: identifiers){
+            if(var.name.equals(identifier)){
+                return var;
+            }
+        }
+        return null;
     }
+
 }
+
 
 class FunctionSignature{
     String name;

@@ -19,6 +19,18 @@ contractPart
 annotationDefinition
   : AnnotationStart AnnotationKind annotationExpression;
 
+// Same as the expression rule except it does not include changes, only comparisons
+// Added '->' for then.
+annotationExpression
+  : annotationExpression compareOp annotationExpression
+  | annotationExpression booleanOp annotationExpression
+  | annotationExpression integerOpBoolean annotationExpression
+  | annotationExpression integerOpInteger annotationExpression
+  | '!'annotationExpression
+  | ('\\forall' | '\\exists') '(' identifier elementaryTypeName ':' annotationExpression? ':' annotationExpression')'
+  | '\\old' '(' identifier ')'
+  | primaryExpression;
+
 
 //Annotation Tokens
 AnnotationStart
@@ -27,20 +39,17 @@ AnnotationStart
 AnnotationKind
   : 'inv'| 'pre'| 'post';
 
+booleanOp
+  : '&&' | '||' | '->';
 
-// Same as the expression rule except it does not include changes, only comparisons
-// Added '->' for then.
-annotationExpression
-  : annotationExpression '&&' annotationExpression
-  | annotationExpression '||' annotationExpression
-  | annotationExpression '->' annotationExpression
-  | annotationExpression ('==' | '!=') annotationExpression
-  | annotationExpression ('>'|'>='|'<'|'<=') annotationExpression
-  | annotationExpression ('+' | '-') annotationExpression
-  | '!'annotationExpression
-  | ('\\forall' | '\\exists') '(' identifier elementaryTypeName ':' annotationExpression? ':' annotationExpression')'
-  | '\\old' '(' identifier ')'
-  | primaryExpression;
+compareOp
+  : '==' | '!=';
+
+integerOpBoolean
+  : ('>'|'>='|'<'|'<=');
+
+integerOpInteger
+  : '+' | '-';
 
 
 

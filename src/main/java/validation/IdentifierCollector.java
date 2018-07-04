@@ -5,7 +5,6 @@ import org.antlr.v4.runtime.tree.ParseTree;
 
 import generated.SolidityAnnotatedBaseVisitor;
 import generated.SolidityAnnotatedParser.FunctionDefinitionContext;
-import generated.SolidityAnnotatedParser.ParameterListContext;
 import generated.SolidityAnnotatedParser.StateVariableDeclarationContext;
 
 
