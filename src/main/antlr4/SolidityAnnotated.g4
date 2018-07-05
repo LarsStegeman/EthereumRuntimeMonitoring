@@ -22,7 +22,8 @@ annotationDefinition
 // Same as the expression rule except it does not include changes, only comparisons
 // Added '->' for then.
 annotationExpression
-  : annotationExpression compareOp annotationExpression
+  : '(' annotationExpression ')'
+  | annotationExpression compareOp annotationExpression
   | annotationExpression booleanOp annotationExpression
   | annotationExpression integerOpBoolean annotationExpression
   | annotationExpression integerOpInteger annotationExpression
