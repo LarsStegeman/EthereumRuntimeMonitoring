@@ -31,12 +31,17 @@ public class TypeChecker extends SolidityAnnotatedBaseVisitor<String>{
             // case of old keyword
             type =this.visit(ctx.identifier());
         }else if(ctx.annotationExpression().size() == 1){
-            // case of ! 'expr'
             String type1 =  this.visit(ctx.annotationExpression(0));
-            if(!"bool".equals(type1)){
-                addError(ctx, "Expected type 'bool' at %s but is %s", ctx.getText(), type1);                
-            }
-            type = "bool";
+            // case of ! 'expr'
+            if(ctx.getStart().getText().equals("!")){
+                if(!"bool".equals(type1)){
+                    addError(ctx, "Expected type 'bool' at %s but is %s", ctx.getText(), type1);                
+                }
+                type = "bool";
+            }else{
+                // case of nesting
+                type = type1;
+            }   
         }else{
             // First visit children and get their type
             String type1 = this.visit(ctx.annotationExpression(0));

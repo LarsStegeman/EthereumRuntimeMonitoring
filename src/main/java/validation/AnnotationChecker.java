@@ -20,14 +20,14 @@ public class AnnotationChecker extends SolidityAnnotatedBaseVisitor<Void>{
     public Void visitAnnotationDefinition(AnnotationDefinitionContext ctx){
         System.out.println("Annotation found");
         System.out.println(ctx.getText());
-        //Create IdentifierChecker with ValidationInformation object
+        //Create TypeChecker with ValidationInformation object
+        //Each annotation will report its own errors and continue.
         TypeChecker checker = new TypeChecker(info);
         String type = checker.visit(ctx.annotationExpression());
         if(!type.equals("bool")){
             //Log error
             System.out.println("Error annotation not of type boolean but is: " + type);
         }
-
         //Check for additional errors
         if(checker.hasErrors()){
             for (String error : checker.getErrors()) {

@@ -38,9 +38,7 @@ public class IdentifierCollector extends SolidityAnnotatedBaseVisitor<Void>{
             args.toArray(array);
             info.addFunction(ctx.identifier().getText(), array);
         }
-
         return null;
-
     }
 
 
