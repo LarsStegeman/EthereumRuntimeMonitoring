@@ -28,4 +28,10 @@ public class ErrorListener extends BaseErrorListener {
 	public List<String> getErrors() {
 		return this.errors;
 	}
+
+	public void printErrors(){
+		for (String error : getErrors()) {
+			System.out.println(error);
+		}
+	}
 }
