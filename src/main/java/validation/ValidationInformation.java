@@ -4,20 +4,20 @@ import java.util.ArrayList;
 
 public class ValidationInformation {
     ArrayList<SolidityVariable> identifiers;
-    ArrayList<FunctionSignature> functions;
+    ArrayList<SolidityFunction> functions;
 
     public ValidationInformation(){
         identifiers = new ArrayList<SolidityVariable>();
-        functions = new ArrayList<FunctionSignature>();
+        functions = new ArrayList<SolidityFunction>();
     }
 
 
-    public void addIdentifier(String name, String type){
+    public void addIdentifier(String name, SolidityType type){
         identifiers.add(new SolidityVariable(name,type));
     }
 
-    public void addFunction(String name, String[] arguments){
-        functions.add(new FunctionSignature(name,arguments));
+    public void addFunction(String name, SolidityVariable[] arguments){
+        functions.add(new SolidityFunction(name,arguments));
     }
 
     public SolidityVariable getIdentifier(String identifier){
@@ -29,16 +29,17 @@ public class ValidationInformation {
         return null;
     }
 
-}
-
-
-class FunctionSignature{
-    String name;
-    String[] arguments;
-
-    public FunctionSignature(String name, String[] arguments){
-        this.name = name;
-        this.arguments = arguments;
+    public SolidityFunction getFunction(String name){
+        for(SolidityFunction var: functions){
+            if(var.name.equals(name)){
+                return var;
+            }
+        }
+        return null;
     }
+
 }
+
+
+
 

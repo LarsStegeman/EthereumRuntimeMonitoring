@@ -1,9 +1,9 @@
 package validation;
 public class SolidityVariable {
     public String name;
-    public String type;
+    public SolidityType type;
 
-    public SolidityVariable(String name, String type){
+    public SolidityVariable(String name, SolidityType type){
         this.name = name;
         this.type = type;
     }

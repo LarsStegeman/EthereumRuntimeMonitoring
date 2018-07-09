@@ -23,8 +23,8 @@ public class AnnotationChecker extends SolidityAnnotatedBaseVisitor<Void>{
         //Create TypeChecker with ValidationInformation object
         //Each annotation will report its own errors and continue.
         TypeChecker checker = new TypeChecker(info);
-        String type = checker.visit(ctx.annotationExpression());
-        if(!type.equals("bool")){
+        SolidityType type = checker.visit(ctx.annotationExpression());
+        if(type != SolidityType.BOOL){
             //Log error
             System.out.println("Error annotation not of type boolean but is: " + type);
         }

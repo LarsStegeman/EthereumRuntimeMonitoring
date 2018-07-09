@@ -11,7 +11,7 @@ import generated.SolidityAnnotatedParser.AnnotationExpressionContext;
 import generated.SolidityAnnotatedParser.IdentifierContext;
 import generated.SolidityAnnotatedParser.PrimaryExpressionContext;
 
-public class TypeChecker extends SolidityAnnotatedBaseVisitor<String>{
+public class TypeChecker extends SolidityAnnotatedBaseVisitor<SolidityType>{
   
     ValidationInformation vi;
 	private List<String> errors;
@@ -22,8 +22,8 @@ public class TypeChecker extends SolidityAnnotatedBaseVisitor<String>{
     }
 
     @Override
-    public String visitAnnotationExpression(AnnotationExpressionContext ctx){
-        String type = null;
+    public SolidityType visitAnnotationExpression(AnnotationExpressionContext ctx){
+        SolidityType type = null;
         //Base Case -- get the type;
         if(ctx.primaryExpression() != null){
             type =this.visit(ctx.primaryExpression());
@@ -31,60 +31,60 @@ public class TypeChecker extends SolidityAnnotatedBaseVisitor<String>{
             // case of old keyword
             type =this.visit(ctx.identifier());
         }else if(ctx.annotationExpression().size() == 1){
-            String type1 =  this.visit(ctx.annotationExpression(0));
+            SolidityType type1 =  this.visit(ctx.annotationExpression(0));
             // case of ! 'expr'
             if(ctx.getStart().getText().equals("!")){
-                if(!"bool".equals(type1)){
+                if(type1 != SolidityType.BOOL){
                     addError(ctx, "Expected type 'bool' at %s but is %s", ctx.getText(), type1);                
                 }
-                type = "bool";
+                type = SolidityType.BOOL;
             }else{
                 // case of nesting
                 type = type1;
             }   
         }else{
             // First visit children and get their type
-            String type1 = this.visit(ctx.annotationExpression(0));
-            String type2 = this.visit(ctx.annotationExpression(1));
+            SolidityType type1 = this.visit(ctx.annotationExpression(0));
+            SolidityType type2 = this.visit(ctx.annotationExpression(1));
             //Different cases for annotationExpression
             if(ctx.booleanOp() != null){
-                if(!"bool".equals(type1) || !"bool".equals(type2)){
+                if(type1 != SolidityType.BOOL || type2 !=SolidityType.BOOL){
                     addError(ctx, "Expected type 'bool', 'bool' at %s but is %s, %s", ctx.getText(), type1, type2); 
                 }
-                type = "bool";
+                type = SolidityType.BOOL;
             }else if(ctx.compareOp() != null){
-                if(type1 == null || !type1.equals(type2) ){
+                if(type1 == null || type1 != type2 ){
                     addError(ctx, "Expected type to match at %s but is %s, %s", ctx.getText(), type1, type2); 
                 }
-                type = "bool";
+                type = SolidityType.BOOL;
             }else if(ctx.integerOpBoolean() != null){
-                if(!"uint256".equals(type1) || !"uint256".equals(type2)){
+                if(type1 != SolidityType.INTEGER || type2!=SolidityType.INTEGER){
                     addError(ctx, "Expected types to be integers at %s but is %s, %s", ctx.getText(), type1, type2); 
                 }
-                type = "bool";
+                type = SolidityType.BOOL;
             }else if(ctx.integerOpInteger() != null){
-                if(!"uint256".equals(type1) || !"uint256".equals(type2)){
+                if(type1 != SolidityType.INTEGER || type2!=SolidityType.INTEGER){
                     addError(ctx, "Expected types to be integers at %s but is %s, %s", ctx.getText(), type1, type2); 
                 }
-                type = "uint256";
+                type = SolidityType.INTEGER;
             }
         }
         return type;
     }
 
     @Override
-    public String visitPrimaryExpression(PrimaryExpressionContext ctx){
+    public SolidityType visitPrimaryExpression(PrimaryExpressionContext ctx){
         return visitChildren(ctx);
     }
 
     @Override
-    public String visitIdentifier(IdentifierContext ctx){
+    public SolidityType visitIdentifier(IdentifierContext ctx){
         SolidityVariable var = vi.getIdentifier(ctx.getText());
         if(var != null){
             return var.type;
         }else{
             addError(ctx, "Identifier %s in annotation not defined as variable", ctx.getText());
-            return  null;
+            return  SolidityType.UNDEFINED;
         }
     }
 
