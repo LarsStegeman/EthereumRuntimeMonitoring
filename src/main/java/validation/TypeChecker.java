@@ -14,10 +14,12 @@ import generated.SolidityAnnotatedParser.PrimaryExpressionContext;
 public class TypeChecker extends SolidityAnnotatedBaseVisitor<SolidityType>{
   
     ValidationInformation vi;
+    private String functionReference;
 	private List<String> errors;
 
-    public TypeChecker(ValidationInformation info){
+    public TypeChecker(ValidationInformation info, String functionReference){
         this.vi = info;
+        this.functionReference = functionReference;
         errors = new ArrayList<>();
     }
 
@@ -79,7 +81,7 @@ public class TypeChecker extends SolidityAnnotatedBaseVisitor<SolidityType>{
 
     @Override
     public SolidityType visitIdentifier(IdentifierContext ctx){
-        SolidityVariable var = vi.getIdentifier(ctx.getText());
+        SolidityVariable var = vi.getIdentifier(ctx.getText(), functionReference);
         if(var != null){
             return var.type;
         }else{

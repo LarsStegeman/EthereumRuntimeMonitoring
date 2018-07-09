@@ -20,10 +20,19 @@ public class ValidationInformation {
         functions.add(new SolidityFunction(name,arguments));
     }
 
-    public SolidityVariable getIdentifier(String identifier){
+    public SolidityVariable getIdentifier(String identifier, String function){
         for(SolidityVariable var: identifiers){
             if(var.name.equals(identifier)){
                 return var;
+            }
+        }
+        for(SolidityFunction func: functions){
+            if(func.name.equals(function)){
+                for(SolidityVariable var: func.arguments){
+                    if(var.name.equals(identifier)){
+                        return var;
+                    }
+                }
             }
         }
         return null;
