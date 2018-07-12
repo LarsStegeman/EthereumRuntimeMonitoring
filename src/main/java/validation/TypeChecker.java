@@ -76,6 +76,11 @@ public class TypeChecker extends SolidityAnnotatedBaseVisitor<SolidityType>{
 
     @Override
     public SolidityType visitPrimaryExpression(PrimaryExpressionContext ctx){
+        if(ctx.numberLiteral() != null){
+            return SolidityType.INTEGER;
+        }else if(ctx.BooleanLiteral() != null){
+            return SolidityType.BOOL;
+        }
         return visitChildren(ctx);
     }
 

@@ -5,7 +5,6 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import generated.SolidityAnnotatedBaseVisitor;
 import generated.SolidityAnnotatedParser.AnnotationDefinitionContext;
 import generated.SolidityAnnotatedParser.ContractDefinitionContext;
-import generated.SolidityAnnotatedParser.FunctionDefinitionContext;
 
 
 /*  This class checks the following properties
