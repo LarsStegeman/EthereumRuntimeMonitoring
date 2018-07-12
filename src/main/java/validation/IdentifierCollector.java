@@ -7,6 +7,8 @@ import generated.SolidityAnnotatedBaseVisitor;
 import generated.SolidityAnnotatedParser.FunctionDefinitionContext;
 import generated.SolidityAnnotatedParser.ParameterContext;
 import generated.SolidityAnnotatedParser.StateVariableDeclarationContext;
+import generated.SolidityAnnotatedParser.StructDefinitionContext;
+import generated.SolidityAnnotatedParser.VariableDeclarationContext;
 
 
 
@@ -22,7 +24,7 @@ public class IdentifierCollector extends SolidityAnnotatedBaseVisitor<Void>{
     @Override
     public Void visitStateVariableDeclaration(StateVariableDeclarationContext ctx){
         System.out.println("VariableDecl: " + ctx.getText());
-        info.addIdentifier(ctx.identifier().getText(), getType(ctx.typeName().getText()));
+        info.addIdentifier(ctx.identifier().getText(), getType(ctx.typeName().getText()), ctx.typeName().getText());
         return null;
     }
 
@@ -33,12 +35,24 @@ public class IdentifierCollector extends SolidityAnnotatedBaseVisitor<Void>{
         if(ctx.identifier() != null){
             ArrayList<SolidityVariable> args = new ArrayList<SolidityVariable>();
             for(ParameterContext i : ctx.parameterList().parameter()){
-                args.add(new SolidityVariable(i.identifier().getText(), getType(i.typeName().getText())));
+                args.add(new SolidityVariable(i.identifier().getText(), getType(i.typeName().getText()), i.typeName().getText()));
             }
             SolidityVariable[] array = new SolidityVariable[args.size()];
             args.toArray(array);
             info.addFunction(ctx.identifier().getText(), array);
         }
+        return null;
+    }
+
+    @Override
+    public Void visitStructDefinition(StructDefinitionContext ctx){
+        ArrayList<SolidityVariable> elements = new ArrayList<SolidityVariable>();
+        for(VariableDeclarationContext i : ctx.variableDeclaration()){
+            elements.add(new SolidityVariable(i.identifier().getText(),getType(i.typeName().getText()), i.typeName().getText()));
+        }
+        SolidityVariable[] array = new SolidityVariable[elements.size()];
+        elements.toArray(array);
+        info.addStruct(ctx.identifier().getText(), array);
         return null;
     }
 
@@ -66,7 +80,7 @@ public class IdentifierCollector extends SolidityAnnotatedBaseVisitor<Void>{
         }else if(input.equals("string")){
             return SolidityType.STRING;
         }else{
-            return SolidityType.UNDEFINED;
+            return SolidityType.STRUCT;
         }
     }
 }

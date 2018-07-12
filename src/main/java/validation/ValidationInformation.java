@@ -5,19 +5,25 @@ import java.util.ArrayList;
 public class ValidationInformation {
     ArrayList<SolidityVariable> identifiers;
     ArrayList<SolidityFunction> functions;
+    ArrayList<SolidityStruct> structs;
 
     public ValidationInformation(){
         identifiers = new ArrayList<SolidityVariable>();
         functions = new ArrayList<SolidityFunction>();
+        structs = new ArrayList<SolidityStruct>();
     }
 
 
-    public void addIdentifier(String name, SolidityType type){
-        identifiers.add(new SolidityVariable(name,type));
+    public void addIdentifier(String name, SolidityType type, String reference){
+        identifiers.add(new SolidityVariable(name,type, reference));
     }
 
     public void addFunction(String name, SolidityVariable[] arguments){
         functions.add(new SolidityFunction(name,arguments));
+    }
+
+    public void addStruct(String name, SolidityVariable[] elements){
+        structs.add(new SolidityStruct(name, elements));
     }
 
     public SolidityVariable getIdentifier(String identifier, String function){
@@ -47,6 +53,27 @@ public class ValidationInformation {
         return null;
     }
 
+    public SolidityStruct getStruct(String name){
+        for(SolidityStruct var: structs){
+            if(var.name.equals(name)){
+                return var;
+            }
+        }
+        return null;
+    }
+
+    public String getReference(String name){
+        for(SolidityVariable var: identifiers){
+            if(var.name.equals(name)){
+                return var.reference;
+            }
+        }
+        return null;
+    }
+
+    public SolidityStruct getStructByReference(String identifierName){
+        return getStruct(getReference(identifierName));
+    }
 }
 
 

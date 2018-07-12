@@ -6,6 +6,8 @@ public enum SolidityType {
     BOOL,
     STRING,
     BYTE,
+    STRUCT,
+    MAPPING,
     UNDEFINED
 }
 

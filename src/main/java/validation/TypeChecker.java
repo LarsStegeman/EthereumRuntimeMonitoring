@@ -9,6 +9,7 @@ import org.antlr.v4.runtime.Token;
 import generated.SolidityAnnotatedBaseVisitor;
 import generated.SolidityAnnotatedParser.AnnotationExpressionContext;
 import generated.SolidityAnnotatedParser.IdentifierContext;
+import generated.SolidityAnnotatedParser.PrimaryAnnotationExpressionContext;
 import generated.SolidityAnnotatedParser.PrimaryExpressionContext;
 
 public class TypeChecker extends SolidityAnnotatedBaseVisitor<SolidityType>{
@@ -27,8 +28,8 @@ public class TypeChecker extends SolidityAnnotatedBaseVisitor<SolidityType>{
     public SolidityType visitAnnotationExpression(AnnotationExpressionContext ctx){
         SolidityType type = null;
         //Base Case -- get the type;
-        if(ctx.primaryExpression() != null){
-            type =this.visit(ctx.primaryExpression());
+        if(ctx.primaryAnnotationExpression() != null){
+            type =this.visit(ctx.primaryAnnotationExpression());
         }else if(ctx.identifier() != null){
             // case of old keyword
             type =this.visit(ctx.identifier());
@@ -72,6 +73,31 @@ public class TypeChecker extends SolidityAnnotatedBaseVisitor<SolidityType>{
             }
         }
         return type;
+    }
+
+    SolidityStruct tempstruct;
+    @Override
+    public SolidityType visitPrimaryAnnotationExpression(PrimaryAnnotationExpressionContext ctx){
+        SolidityType result = SolidityType.UNDEFINED;
+        if(ctx.primaryExpression() != null){
+            result = visit(ctx.primaryExpression());
+            if(result == SolidityType.STRUCT){
+                tempstruct = vi.getStructByReference(ctx.primaryExpression().identifier().getText());
+            }
+        }else{
+            visit(ctx.primaryAnnotationExpression());
+            if(tempstruct != null){
+                for(SolidityVariable var : tempstruct.elements){
+                    if(var.name.equals(ctx.identifier().getText())){
+                        result = var.type;
+                        if(var.type == SolidityType.STRUCT){
+                            tempstruct = vi.getStruct(var.reference);
+                        }
+                    }
+                }
+            }
+        }
+        return result;
     }
 
     @Override
