@@ -30,8 +30,10 @@ annotationExpression
   | '!'annotationExpression
   | ('\\forall' | '\\exists') '(' identifier elementaryTypeName ':' annotationExpression? ':' annotationExpression')'
   | '\\old' '(' identifier ')'
-  | primaryExpression;
+  | primaryAnnotationExpression;
 
+primaryAnnotationExpression
+  : primaryExpression | primaryAnnotationExpression '.' identifier;
 
 //Annotation Tokens
 AnnotationStart

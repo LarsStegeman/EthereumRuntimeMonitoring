@@ -52,6 +52,66 @@ public class SolidityAnnotatedBaseListener implements SolidityAnnotatedListener 
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterPrimaryAnnotationExpression(SolidityAnnotatedParser.PrimaryAnnotationExpressionContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitPrimaryAnnotationExpression(SolidityAnnotatedParser.PrimaryAnnotationExpressionContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterBooleanOp(SolidityAnnotatedParser.BooleanOpContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitBooleanOp(SolidityAnnotatedParser.BooleanOpContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterCompareOp(SolidityAnnotatedParser.CompareOpContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitCompareOp(SolidityAnnotatedParser.CompareOpContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterIntegerOpBoolean(SolidityAnnotatedParser.IntegerOpBooleanContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitIntegerOpBoolean(SolidityAnnotatedParser.IntegerOpBooleanContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterIntegerOpInteger(SolidityAnnotatedParser.IntegerOpIntegerContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitIntegerOpInteger(SolidityAnnotatedParser.IntegerOpIntegerContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterSourceUnit(SolidityAnnotatedParser.SourceUnitContext ctx) { }
 	/**
 	 * {@inheritDoc}

@@ -29,6 +29,36 @@ public interface SolidityAnnotatedVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitAnnotationExpression(SolidityAnnotatedParser.AnnotationExpressionContext ctx);
 	/**
+	 * Visit a parse tree produced by {@link SolidityAnnotatedParser#primaryAnnotationExpression}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitPrimaryAnnotationExpression(SolidityAnnotatedParser.PrimaryAnnotationExpressionContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link SolidityAnnotatedParser#booleanOp}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitBooleanOp(SolidityAnnotatedParser.BooleanOpContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link SolidityAnnotatedParser#compareOp}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitCompareOp(SolidityAnnotatedParser.CompareOpContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link SolidityAnnotatedParser#integerOpBoolean}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitIntegerOpBoolean(SolidityAnnotatedParser.IntegerOpBooleanContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link SolidityAnnotatedParser#integerOpInteger}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitIntegerOpInteger(SolidityAnnotatedParser.IntegerOpIntegerContext ctx);
+	/**
 	 * Visit a parse tree produced by {@link SolidityAnnotatedParser#sourceUnit}.
 	 * @param ctx the parse tree
 	 * @return the visitor result

@@ -38,6 +38,56 @@ public interface SolidityAnnotatedListener extends ParseTreeListener {
 	 */
 	void exitAnnotationExpression(SolidityAnnotatedParser.AnnotationExpressionContext ctx);
 	/**
+	 * Enter a parse tree produced by {@link SolidityAnnotatedParser#primaryAnnotationExpression}.
+	 * @param ctx the parse tree
+	 */
+	void enterPrimaryAnnotationExpression(SolidityAnnotatedParser.PrimaryAnnotationExpressionContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SolidityAnnotatedParser#primaryAnnotationExpression}.
+	 * @param ctx the parse tree
+	 */
+	void exitPrimaryAnnotationExpression(SolidityAnnotatedParser.PrimaryAnnotationExpressionContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link SolidityAnnotatedParser#booleanOp}.
+	 * @param ctx the parse tree
+	 */
+	void enterBooleanOp(SolidityAnnotatedParser.BooleanOpContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SolidityAnnotatedParser#booleanOp}.
+	 * @param ctx the parse tree
+	 */
+	void exitBooleanOp(SolidityAnnotatedParser.BooleanOpContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link SolidityAnnotatedParser#compareOp}.
+	 * @param ctx the parse tree
+	 */
+	void enterCompareOp(SolidityAnnotatedParser.CompareOpContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SolidityAnnotatedParser#compareOp}.
+	 * @param ctx the parse tree
+	 */
+	void exitCompareOp(SolidityAnnotatedParser.CompareOpContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link SolidityAnnotatedParser#integerOpBoolean}.
+	 * @param ctx the parse tree
+	 */
+	void enterIntegerOpBoolean(SolidityAnnotatedParser.IntegerOpBooleanContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SolidityAnnotatedParser#integerOpBoolean}.
+	 * @param ctx the parse tree
+	 */
+	void exitIntegerOpBoolean(SolidityAnnotatedParser.IntegerOpBooleanContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link SolidityAnnotatedParser#integerOpInteger}.
+	 * @param ctx the parse tree
+	 */
+	void enterIntegerOpInteger(SolidityAnnotatedParser.IntegerOpIntegerContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SolidityAnnotatedParser#integerOpInteger}.
+	 * @param ctx the parse tree
+	 */
+	void exitIntegerOpInteger(SolidityAnnotatedParser.IntegerOpIntegerContext ctx);
+	/**
 	 * Enter a parse tree produced by {@link SolidityAnnotatedParser#sourceUnit}.
 	 * @param ctx the parse tree
 	 */
