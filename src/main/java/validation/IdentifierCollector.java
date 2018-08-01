@@ -5,9 +5,11 @@ import java.util.List;
 
 import generated.SolidityAnnotatedBaseVisitor;
 import generated.SolidityAnnotatedParser.FunctionDefinitionContext;
+import generated.SolidityAnnotatedParser.MappingContext;
 import generated.SolidityAnnotatedParser.ParameterContext;
 import generated.SolidityAnnotatedParser.StateVariableDeclarationContext;
 import generated.SolidityAnnotatedParser.StructDefinitionContext;
+import generated.SolidityAnnotatedParser.TypeNameContext;
 import generated.SolidityAnnotatedParser.VariableDeclarationContext;
 
 
@@ -24,7 +26,16 @@ public class IdentifierCollector extends SolidityAnnotatedBaseVisitor<Void>{
     @Override
     public Void visitStateVariableDeclaration(StateVariableDeclarationContext ctx){
         System.out.println("VariableDecl: " + ctx.getText());
-        info.addIdentifier(ctx.identifier().getText(), getType(ctx.typeName().getText()), ctx.typeName().getText());
+        if(ctx.typeName().mapping() != null){
+            // Mapping case
+            parseMapping(ctx.typeName().mapping(), ctx.identifier().getText());
+        }else if(ctx.typeName().typeName() != null){
+            // Array case
+            parseArray(ctx.typeName(), ctx.identifier().getText());
+        }else{
+            // Struct or other state variable
+            info.addIdentifier(ctx.identifier().getText(), getType(ctx.typeName().getText()), ctx.typeName().getText());
+        }
         return null;
     }
 
@@ -56,6 +67,32 @@ public class IdentifierCollector extends SolidityAnnotatedBaseVisitor<Void>{
         return null;
     }
 
+    public void parseMapping(MappingContext ctx, String identifier){
+        ArrayList<SolidityType> keys = new ArrayList<>();
+        keys.add(getType(ctx.elementaryTypeName().getText()));
+        //Go recursive in object for more possible mappings
+        TypeNameContext current = ctx.typeName();
+        while(current.mapping() != null){
+            keys.add(getType(current.mapping().elementaryTypeName().getText()));
+            current = current.mapping().typeName();
+        }
+        SolidityType[] keyArray = new SolidityType[keys.size()];
+        keys.toArray(keyArray);
+        SolidityType value = getType(current.getText());
+        String reference = current.getText();
+        //Add mapping
+        info.addMapping(identifier, keyArray, value, reference);
+    }
+
+    public void parseArray(TypeNameContext ctx, String identifier){
+        int depth = 1;
+        TypeNameContext current = ctx.typeName();
+        while(current.typeName() != null){
+            depth++;
+            current = current.typeName();
+        }
+        info.addArray(identifier, depth,getType(current.getText()), ctx.typeName().getText());
+    }
 
     /*
         Function returns one of the SolidityType depending on the input

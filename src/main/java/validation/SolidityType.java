@@ -8,6 +8,7 @@ public enum SolidityType {
     BYTE,
     STRUCT,
     MAPPING,
+    ARRAY,
     UNDEFINED
 }
 

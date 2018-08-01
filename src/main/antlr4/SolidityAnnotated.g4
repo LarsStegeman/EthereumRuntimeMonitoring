@@ -29,11 +29,13 @@ annotationExpression
   | annotationExpression integerOpInteger annotationExpression
   | '!'annotationExpression
   | ('\\forall' | '\\exists') '(' identifier elementaryTypeName ':' annotationExpression? ':' annotationExpression')'
-  | '\\old' '(' identifier ')'
   | primaryAnnotationExpression;
 
 primaryAnnotationExpression
-  : primaryExpression | primaryAnnotationExpression '.' identifier;
+  : primaryExpression 
+  | primaryAnnotationExpression '.' identifier
+  | primaryAnnotationExpression '[' primaryExpression ']'
+  | '\\old' '(' primaryAnnotationExpression ')';
 
 //Annotation Tokens
 AnnotationStart

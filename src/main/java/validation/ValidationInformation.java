@@ -18,6 +18,14 @@ public class ValidationInformation {
         identifiers.add(new SolidityVariable(name,type, reference));
     }
 
+    public void addMapping(String name, SolidityType[] keys, SolidityType value, String reference){
+        identifiers.add(new SolidityVariable(name,keys,value,reference));
+    }
+
+    public void addArray(String name, int depth, SolidityType value, String reference){
+        identifiers.add(new SolidityVariable(name,depth,value,reference));
+    }
+
     public void addFunction(String name, SolidityVariable[] arguments){
         functions.add(new SolidityFunction(name,arguments));
     }
