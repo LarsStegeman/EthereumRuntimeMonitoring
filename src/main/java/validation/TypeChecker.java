@@ -75,24 +75,64 @@ public class TypeChecker extends SolidityAnnotatedBaseVisitor<SolidityType>{
         return type;
     }
 
-    SolidityStruct tempstruct;
     @Override
     public SolidityType visitPrimaryAnnotationExpression(PrimaryAnnotationExpressionContext ctx){
         SolidityType result = SolidityType.UNDEFINED;
-        if(ctx.primaryExpression() != null){
+        // Base case a primary expression
+        if(ctx.primaryExpression() != null && ctx.primaryAnnotationExpression() == null){
             result = visit(ctx.primaryExpression());
-            if(result == SolidityType.STRUCT){
-                tempstruct = vi.getStructByReference(ctx.primaryExpression().identifier().getText());
-            }
+        }else if(ctx.primaryAnnotationExpression() != null && ctx.primaryExpression() == null && ctx.identifier() == null){
+            result = visit(ctx.primaryAnnotationExpression());
         }else{
-            visit(ctx.primaryAnnotationExpression());
-            if(tempstruct != null){
-                for(SolidityVariable var : tempstruct.elements){
-                    if(var.name.equals(ctx.identifier().getText())){
-                        result = var.type;
-                        if(var.type == SolidityType.STRUCT){
-                            tempstruct = vi.getStruct(var.reference);
-                        }
+            //Case of mapping/array/struct
+            result = this.parseComplexStructure(ctx);
+        }
+        return result;
+    }
+
+
+    public SolidityType parseComplexStructure(PrimaryAnnotationExpressionContext ctx){
+        //First we have to traverse the tree to get the base variable.
+        SolidityType result = SolidityType.UNDEFINED;
+        PrimaryAnnotationExpressionContext current = ctx.primaryAnnotationExpression();
+        while(current.primaryAnnotationExpression() != null){
+            current = current.primaryAnnotationExpression();
+        }
+        SolidityVariable var = vi.getIdentifier(current.getText(), functionReference);
+        
+        // Now validate the rest of the structure, from the bottom up
+        // For each type of complex structure.
+        if(var.type == SolidityType.MAPPING){
+            for(int i = 0; i<var.from.length; i++){
+                current = (PrimaryAnnotationExpressionContext) current.getParent();
+                SolidityType element = visit(current.primaryExpression());
+                if(element != var.from[i]){
+                    // TODO Report error
+                }
+            }
+            result = var.to;
+        }else if(var.type == SolidityType.ARRAY){
+            for(int i = 0; i<var.depth; i++){
+                current = (PrimaryAnnotationExpressionContext) current.getParent();
+                SolidityType element = visit(current.primaryExpression());
+                if(element != SolidityType.INTEGER){
+                    // TODO Report error
+                }
+
+            }
+            result = var.to;
+        }
+        //Parse Struct
+        if(var.type == SolidityType.STRUCT ||result == SolidityType.STRUCT){
+            //Parse possible structs here.
+            while(current != ctx){
+                current = (PrimaryAnnotationExpressionContext) current.getParent();
+                SolidityStruct struct = vi.getStruct(var.reference);
+                for(SolidityVariable elements : struct.elements){
+                    if(elements.name.equals(current.identifier().getText())){
+                        result = elements.type;
+                        var = elements;
+                        break;
                     }
                 }
             }
