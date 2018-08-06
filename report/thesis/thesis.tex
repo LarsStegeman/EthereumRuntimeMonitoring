@@ -1,0 +1,95 @@
+\documentclass[a4paper]{article}
+
+%% Language and font encodings
+\usepackage[english]{babel}
+\usepackage[utf8x]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{hyperref}
+
+%% Sets page size and margins
+\usepackage[a4paper,top=3cm,bottom=2cm,left=3cm,right=3cm,marginparwidth=1.75cm]{geometry}
+
+%% Useful packages
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{url}
+\usepackage{listings}
+\usepackage{enumitem}
+
+%% Solidity highlighting for listings
+%\input{solidity-highlighting.tex}
+
+
+\title{Runtime Verification of Smart Contracts \\
+\large On the Ethereum network \\}
+
+\author{Lars Stegeman [s1346466]\\ l.stegeman@student.utwente.nl}
+
+\begin{document}
+
+\maketitle
+
+\tableofcontents
+
+
+
+
+\section{Solidity}
+
+\section{Tool Overview}
+
+\section{Annotation Language}
+The first step towards implementing the tool is to define an annotation syntax, and formally write this down using a grammar.
+\subsection{Grammar definition}
+There already exists a grammar for the complete Solidity language. This grammar is written down using the language that is used by ANTLR tool. ANTLR is a parser generator which helps automate the building of a compiler. ANTLR has the capabilities to extend certain grammars. This is done by inheritance over the original grammar. This priciple is explained in detail here (find ref). We will use this principle to extend the grammar of Solidity to recognize the special annotations that will later be used in the tool. \\
+The annotations have certain requirements that can be summarized the following way. Later each requirement is discussed in detail.
+\begin{itemize}
+    \item Annotations can be specified at the top level.
+    \item Annotations should be able to reference all variables used in the contract.
+    \item Basic math operations can be used within annotations.
+    \item Annotations can not have side effects.
+    \item The type should be boolean at the highest level (that way they can be verified).
+    \item There are two types of annotations invariants and pre- or postconditions to a function.
+    \item Global variables (\texttt{msg} and \texttt{address}) can be used in annotations.
+\end{itemize}
+
+The annotation syntax is heavily inspired from the JML annotation syntax. But has a lot less built in keywords since the setting is easier and the tool is less complex. The original grammar is extended in such a way that annotations can only be defined on the top level. The relevant parts of the original Solidity grammar can be seen in the snippet below. This does not include the full grammar specification but only the parts that are relevant for the annotation syntax that is explained later.
+
+\begin{lstlisting}
+grammar Solidity;
+
+sourceUnit
+  : (pragmaDirective | importDirective | contractDefinition)* EOF ;
+
+contractDefinition
+  : ( 'contract' | 'interface' | 'library' ) identifier
+    ( 'is' inheritanceSpecifier (',' inheritanceSpecifier )* )?
+    '{' contractPart* '}' ;
+
+contractPart
+    : stateVariableDeclaration
+    | usingForDeclaration
+    | structDefinition
+    | constructorDefinition
+    | modifierDefinition
+    | functionDefinition
+    | eventDefinition
+    | enumDefinition ;
+\end{lstlisting}
+
+First annotations should be allowed only at the top level. Since the original grammar 
+
+\section{Validation}
+\begin{itemize}
+    \item Collecting variables
+    \item Typechecking annotations
+\end{itemize}
+\subsection{Implementation}
+
+\section{Generation}
+\begin{itemize}
+    \item TODO
+\end{itemize}
+
+
+\end{document}
