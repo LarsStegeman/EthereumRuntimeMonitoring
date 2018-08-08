@@ -17,7 +17,8 @@
 \usepackage{enumitem}
 
 %% Solidity highlighting for listings
-%\input{solidity-highlighting.tex}
+\input{solidity-highlighting.tex}
+\lstset{escapeinside={<@}{@>}}
 
 
 \title{Runtime Verification of Smart Contracts \\
@@ -33,6 +34,7 @@
 
 
 
+\section{Abstract}
 
 \section{Solidity}
 
@@ -55,7 +57,7 @@ The annotations have certain requirements that can be summarized the following w
 
 The annotation syntax is heavily inspired from the JML annotation syntax. But has a lot less built in keywords since the setting is easier and the tool is less complex. The original grammar is extended in such a way that annotations can only be defined on the top level. The relevant parts of the original Solidity grammar can be seen in the snippet below. This does not include the full grammar specification but only the parts that are relevant for the annotation syntax that is explained later.
 
-\begin{lstlisting}
+\begin{lstlisting}[basicstyle=\ttfamily]
 grammar Solidity;
 
 sourceUnit
@@ -76,8 +78,64 @@ contractPart
     | eventDefinition
     | enumDefinition ;
 \end{lstlisting}
+In the original grammar the definition of \texttt{contractPart} is what defines the declaration of variables and the definitions for structs and functions. This is where the extra annotations have to be added to the grammar. The snippet below shows the basic definition of an annotation.
+\begin{lstlisting}[basicstyle=\ttfamily]
+grammar SolidityAnnotated;
+import Solidity;
 
-First annotations should be allowed only at the top level. Since the original grammar 
+contractPart
+  : stateVariableDeclaration
+  | usingForDeclaration
+  | structDefinition
+  | constructorDefinition
+  | modifierDefinition
+  | functionDefinition
+  | eventDefinition
+  | enumDefinition 
+  <@\textcolor{red}{  | annotationDefinition ;}@>
+
+annotationDefinition
+  : AnnotationStart AnnotationKind annotationExpression ;
+
+annotationExpression
+  : '(' annotationExpression ')'
+  | annotationExpression compareOp annotationExpression
+  | annotationExpression booleanOp annotationExpression
+  | annotationExpression integerOpBoolean annotationExpression
+  | annotationExpression integerOpInteger annotationExpression
+  | '!'annotationExpression
+  | ('\\forall' | '\\exists') '(' identifier elementaryTypeName ':' annotationExpression? ':' annotationExpression')'
+  | primaryAnnotationExpression ;
+
+primaryAnnotationExpression
+  : primaryExpression 
+  | primaryAnnotationExpression '.' identifier
+  | primaryAnnotationExpression '[' primaryExpression ']'
+  | '\\old' '(' primaryAnnotationExpression ')' ;
+
+AnnotationStart
+  : '//@' ;
+
+AnnotationKind
+  : 'inv'| 'pre'| 'post' ;
+
+booleanOp
+  : '&&' | '||' | '->' ;
+
+compareOp
+  : '==' | '!=';
+
+integerOpBoolean
+  : ('>'|'>='|'<'|'<=') ;
+
+integerOpInteger
+  : '+' | '-' ;
+
+LINE_COMMENT 
+  : '//' ~[@] ~[\r\n]* -> channel(HIDDEN) ;
+
+\end{lstlisting}
+
 
 \section{Validation}
 \begin{itemize}
