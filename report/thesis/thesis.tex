@@ -36,6 +36,8 @@
 
 \section{Abstract}
 
+\section{Introduction}
+
 \section{Solidity}
 
 \section{Tool Overview}
@@ -55,7 +57,7 @@ The annotations have certain requirements that can be summarized the following w
     \item Global variables (\texttt{msg} and \texttt{address}) can be used in annotations.
 \end{itemize}
 
-The annotation syntax is heavily inspired from the JML annotation syntax. But has a lot less built in keywords since the setting is easier and the tool is less complex. The original grammar is extended in such a way that annotations can only be defined on the top level. The relevant parts of the original Solidity grammar can be seen in the snippet below. This does not include the full grammar specification but only the parts that are relevant for the annotation syntax that is explained later.
+The annotation syntax is heavily inspired from the JML annotation syntax. But has a lot less built in keywords since the setting is easier and the tool is less complex. The original grammar is extended in such a way that annotations can only be defined on the top level. The relevant parts of the original Solidity grammar can be seen in the snippet below. This does not include the full grammar specification but only the parts that are relevant for the annotation syntax.
 
 \begin{lstlisting}[basicstyle=\ttfamily]
 grammar Solidity;
@@ -78,7 +80,7 @@ contractPart
     | eventDefinition
     | enumDefinition ;
 \end{lstlisting}
-In the original grammar the definition of \texttt{contractPart} is what defines the declaration of variables and the definitions for structs and functions. This is where the extra annotations have to be added to the grammar. The snippet below shows the basic definition of an annotation.
+In the original grammar the definition of \texttt{contractPart} is what defines the declaration of variables and the definitions for structs and functions. This is where the extra annotations have to be added to the grammar. The snippet below shows the basic definition of an annotation. This is not the complete grammar some of the tokens are omitted from this snippet, since they are not required to understand the grammar definition.
 \begin{lstlisting}[basicstyle=\ttfamily]
 grammar SolidityAnnotated;
 import Solidity;
@@ -119,23 +121,13 @@ AnnotationStart
 AnnotationKind
   : 'inv'| 'pre'| 'post' ;
 
-booleanOp
-  : '&&' | '||' | '->' ;
-
-compareOp
-  : '==' | '!=';
-
-integerOpBoolean
-  : ('>'|'>='|'<'|'<=') ;
-
-integerOpInteger
-  : '+' | '-' ;
-
 LINE_COMMENT 
   : '//' ~[@] ~[\r\n]* -> channel(HIDDEN) ;
-
 \end{lstlisting}
-
+An AnnotationDefinition is composed of multiple components. It has a \texttt{AnnotationStart}, \texttt{AnnotationKind} and \texttt{annotationExpression} component. The \texttt{AnnotationStart} token is used to signal that an annotation definition is coming next. This is defined as '//@' making it a line comment to other solidity compilers. This makes annotated solidity code still compilable by normal compilers. For the grammar to accept this notation the \texttt{LINE\_COMMENT} token has to be adjusted to not accept '@' as a second character. Otherwise all annotation comments would be recognized as a \texttt{LINE\_COMMENT} making it unusable. \\
+There are two types of annotations they are defined by the token \texttt{AnnotationKind}. They can either be a invariant or a pre- or post-condition of a function. \\
+Each annotation has an expression which has to be evaluated called \texttt{annotationExpression}. The expression parser rules are separated between \texttt{annotationExpression} and \texttt{primaryAnnotationExpression}. This is needed to keep the hierarchy in parsing and prevent using primary definitions with complex expressions. For example using the keyword '\textbackslash old' before parenthesis.\\
+The annotation expressions use a different parser rules than the expression rules that are used within the original Solidity grammar. The \texttt{annotationExpression} does not allow syntax like \texttt{expression + '++'} and to distinguish these a new parser rule was introduced for annotations only.
 
 \section{Validation}
 \begin{itemize}
@@ -143,6 +135,7 @@ LINE_COMMENT
     \item Typechecking annotations
 \end{itemize}
 \subsection{Implementation}
+
 
 \section{Generation}
 \begin{itemize}
