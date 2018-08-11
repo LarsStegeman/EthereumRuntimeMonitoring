@@ -44,8 +44,10 @@
 
 \section{Annotation Language}
 The first step towards implementing the tool is to define an annotation syntax, and formally write this down using a grammar.
+
+\subsection{ANTLR}
 \subsection{Grammar definition}
-There already exists a grammar for the complete Solidity language. This grammar is written down using the language that is used by ANTLR tool. ANTLR is a parser generator which helps automate the building of a compiler. ANTLR has the capabilities to extend certain grammars. This is done by inheritance over the original grammar. This priciple is explained in detail here (find ref). We will use this principle to extend the grammar of Solidity to recognize the special annotations that will later be used in the tool. \\
+There already exists a grammar for the complete Solidity language. This grammar is written down using the language that is used by ANTLR tool. ANTLR is a parser generator which helps automate the building of a compiler. ANTLR has the capabilities to extend certain grammars. This is done by inheritance over the original grammar. This principle is explained in detail here (find ref). We will use this principle to extend the grammar of Solidity to recognize the special annotations that will later be used in the tool. \\
 The annotations have certain requirements that can be summarized the following way. Later each requirement is discussed in detail.
 \begin{itemize}
     \item Annotations can be specified at the top level.
@@ -130,10 +132,15 @@ Each annotation has an expression which has to be evaluated called \texttt{annot
 The annotation expressions use a different parser rules than the expression rules that are used within the original Solidity grammar. The \texttt{annotationExpression} does not allow syntax like \texttt{expression + '++'} and to distinguish these a new parser rule was introduced for annotations only.
 
 \section{Validation}
+\subsection{Design}
+Annotations have to be validated on certain aspects for them to be correct and usable. These aspects have to be verified first for the annotations to be useful in the next generation phase. The parser ensures annotations are syntactically correct however there are more properties that have to be checked.
+In short the validation step within the program has to do the following things:
 \begin{itemize}
-    \item Collecting variables
-    \item Typechecking annotations
+    \item Collect all variables within the contract.
+    \item Typecheck annotations.
 \end{itemize}
+
+The validation phase will consist of two programs that walk the complete parse tree. The first walk will collect all the variables and defined structures and store these in an information object. The second walk will type check each annotation individually. During this type checking the type of each identifier is looked up using the collected information from the first walk. 
 \subsection{Implementation}
 
 
