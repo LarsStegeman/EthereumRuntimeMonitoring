@@ -135,6 +135,7 @@ public class TypeChecker extends SolidityAnnotatedBaseVisitor<SolidityType>{
                         break;
                     }
                 }
+                //TODO report error when identifier not found
             }
         }
         return result;

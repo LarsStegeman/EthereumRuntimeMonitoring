@@ -30,13 +30,13 @@ public class SolidityAnnotatedParser extends Parser {
 		T__73=74, T__74=75, T__75=76, T__76=77, T__77=78, T__78=79, T__79=80, 
 		T__80=81, T__81=82, T__82=83, T__83=84, T__84=85, T__85=86, T__86=87, 
 		T__87=88, T__88=89, T__89=90, T__90=91, T__91=92, AnnotationStart=93, 
-		AnnotationKind=94, LINE_COMMENT=95, Int=96, Uint=97, Byte=98, Fixed=99, 
-		Ufixed=100, VersionLiteral=101, BooleanLiteral=102, DecimalNumber=103, 
-		HexNumber=104, NumberUnit=105, HexLiteral=106, ReservedKeyword=107, AnonymousKeyword=108, 
-		BreakKeyword=109, ConstantKeyword=110, ContinueKeyword=111, ExternalKeyword=112, 
-		IndexedKeyword=113, InternalKeyword=114, PayableKeyword=115, PrivateKeyword=116, 
-		PublicKeyword=117, PureKeyword=118, ViewKeyword=119, Identifier=120, StringLiteral=121, 
-		WS=122, COMMENT=123;
+		AnnotationKind=94, LINE_COMMENT=95, WS=96, Int=97, Uint=98, Byte=99, Fixed=100, 
+		Ufixed=101, VersionLiteral=102, BooleanLiteral=103, DecimalNumber=104, 
+		HexNumber=105, NumberUnit=106, HexLiteral=107, ReservedKeyword=108, AnonymousKeyword=109, 
+		BreakKeyword=110, ConstantKeyword=111, ContinueKeyword=112, ExternalKeyword=113, 
+		IndexedKeyword=114, InternalKeyword=115, PayableKeyword=116, PrivateKeyword=117, 
+		PublicKeyword=118, PureKeyword=119, ViewKeyword=120, Identifier=121, StringLiteral=122, 
+		COMMENT=123;
 	public static final int
 		RULE_contractPart = 0, RULE_annotationDefinition = 1, RULE_annotationExpression = 2, 
 		RULE_primaryAnnotationExpression = 3, RULE_booleanOp = 4, RULE_compareOp = 5, 
@@ -107,8 +107,9 @@ public class SolidityAnnotatedParser extends Parser {
 		"'&='", "'<<='", "'>>='", "'+='", "'-='", "'*='", "'/='", "'%='", "'let'", 
 		"':='", "'=:'", "'switch'", "'case'", "'default'", "'//@'", null, null, 
 		null, null, null, null, null, null, null, null, null, null, null, null, 
-		"'anonymous'", "'break'", "'constant'", "'continue'", "'external'", "'indexed'", 
-		"'internal'", "'payable'", "'private'", "'public'", "'pure'", "'view'"
+		null, "'anonymous'", "'break'", "'constant'", "'continue'", "'external'", 
+		"'indexed'", "'internal'", "'payable'", "'private'", "'public'", "'pure'", 
+		"'view'"
 	};
 	private static final String[] _SYMBOLIC_NAMES = {
 		null, null, null, null, null, null, null, null, null, null, null, null, 
@@ -119,12 +120,12 @@ public class SolidityAnnotatedParser extends Parser {
 		null, null, null, null, null, null, null, null, null, null, null, null, 
 		null, null, null, null, null, null, null, null, null, null, null, null, 
 		null, null, null, null, null, null, null, null, null, "AnnotationStart", 
-		"AnnotationKind", "LINE_COMMENT", "Int", "Uint", "Byte", "Fixed", "Ufixed", 
-		"VersionLiteral", "BooleanLiteral", "DecimalNumber", "HexNumber", "NumberUnit", 
-		"HexLiteral", "ReservedKeyword", "AnonymousKeyword", "BreakKeyword", "ConstantKeyword", 
-		"ContinueKeyword", "ExternalKeyword", "IndexedKeyword", "InternalKeyword", 
-		"PayableKeyword", "PrivateKeyword", "PublicKeyword", "PureKeyword", "ViewKeyword", 
-		"Identifier", "StringLiteral", "WS", "COMMENT"
+		"AnnotationKind", "LINE_COMMENT", "WS", "Int", "Uint", "Byte", "Fixed", 
+		"Ufixed", "VersionLiteral", "BooleanLiteral", "DecimalNumber", "HexNumber", 
+		"NumberUnit", "HexLiteral", "ReservedKeyword", "AnonymousKeyword", "BreakKeyword", 
+		"ConstantKeyword", "ContinueKeyword", "ExternalKeyword", "IndexedKeyword", 
+		"InternalKeyword", "PayableKeyword", "PrivateKeyword", "PublicKeyword", 
+		"PureKeyword", "ViewKeyword", "Identifier", "StringLiteral", "COMMENT"
 	};
 	public static final Vocabulary VOCABULARY = new VocabularyImpl(_LITERAL_NAMES, _SYMBOLIC_NAMES);
 
@@ -462,7 +463,7 @@ public class SolidityAnnotatedParser extends Parser {
 				setState(208);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
-				if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << T__0) | (1L << T__2) | (1L << T__3) | (1L << T__4) | (1L << T__7) | (1L << T__9) | (1L << T__29) | (1L << T__58) | (1L << T__59) | (1L << T__60) | (1L << T__61) | (1L << T__62))) != 0) || ((((_la - 96)) & ~0x3f) == 0 && ((1L << (_la - 96)) & ((1L << (Int - 96)) | (1L << (Uint - 96)) | (1L << (Byte - 96)) | (1L << (Fixed - 96)) | (1L << (Ufixed - 96)) | (1L << (BooleanLiteral - 96)) | (1L << (DecimalNumber - 96)) | (1L << (HexNumber - 96)) | (1L << (HexLiteral - 96)) | (1L << (Identifier - 96)) | (1L << (StringLiteral - 96)))) != 0)) {
+				if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << T__0) | (1L << T__2) | (1L << T__3) | (1L << T__4) | (1L << T__7) | (1L << T__9) | (1L << T__29) | (1L << T__58) | (1L << T__59) | (1L << T__60) | (1L << T__61) | (1L << T__62))) != 0) || ((((_la - 97)) & ~0x3f) == 0 && ((1L << (_la - 97)) & ((1L << (Int - 97)) | (1L << (Uint - 97)) | (1L << (Byte - 97)) | (1L << (Fixed - 97)) | (1L << (Ufixed - 97)) | (1L << (BooleanLiteral - 97)) | (1L << (DecimalNumber - 97)) | (1L << (HexNumber - 97)) | (1L << (HexLiteral - 97)) | (1L << (Identifier - 97)) | (1L << (StringLiteral - 97)))) != 0)) {
 					{
 					setState(207);
 					annotationExpression(0);
@@ -1793,12 +1794,12 @@ public class SolidityAnnotatedParser extends Parser {
 			setState(381);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
-			while (((((_la - 110)) & ~0x3f) == 0 && ((1L << (_la - 110)) & ((1L << (ConstantKeyword - 110)) | (1L << (InternalKeyword - 110)) | (1L << (PrivateKeyword - 110)) | (1L << (PublicKeyword - 110)))) != 0)) {
+			while (((((_la - 111)) & ~0x3f) == 0 && ((1L << (_la - 111)) & ((1L << (ConstantKeyword - 111)) | (1L << (InternalKeyword - 111)) | (1L << (PrivateKeyword - 111)) | (1L << (PublicKeyword - 111)))) != 0)) {
 				{
 				{
 				setState(378);
 				_la = _input.LA(1);
-				if ( !(((((_la - 110)) & ~0x3f) == 0 && ((1L << (_la - 110)) & ((1L << (ConstantKeyword - 110)) | (1L << (InternalKeyword - 110)) | (1L << (PrivateKeyword - 110)) | (1L << (PublicKeyword - 110)))) != 0)) ) {
+				if ( !(((((_la - 111)) & ~0x3f) == 0 && ((1L << (_la - 111)) & ((1L << (ConstantKeyword - 111)) | (1L << (InternalKeyword - 111)) | (1L << (PrivateKeyword - 111)) | (1L << (PublicKeyword - 111)))) != 0)) ) {
 				_errHandler.recoverInline(this);
 				}
 				else {
@@ -1970,7 +1971,7 @@ public class SolidityAnnotatedParser extends Parser {
 			setState(413);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
-			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << T__29) | (1L << T__42) | (1L << T__46) | (1L << T__58) | (1L << T__59) | (1L << T__60) | (1L << T__61) | (1L << T__62))) != 0) || ((((_la - 96)) & ~0x3f) == 0 && ((1L << (_la - 96)) & ((1L << (Int - 96)) | (1L << (Uint - 96)) | (1L << (Byte - 96)) | (1L << (Fixed - 96)) | (1L << (Ufixed - 96)) | (1L << (Identifier - 96)))) != 0)) {
+			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << T__29) | (1L << T__42) | (1L << T__46) | (1L << T__58) | (1L << T__59) | (1L << T__60) | (1L << T__61) | (1L << T__62))) != 0) || ((((_la - 97)) & ~0x3f) == 0 && ((1L << (_la - 97)) & ((1L << (Int - 97)) | (1L << (Uint - 97)) | (1L << (Byte - 97)) | (1L << (Fixed - 97)) | (1L << (Ufixed - 97)) | (1L << (Identifier - 97)))) != 0)) {
 				{
 				setState(403);
 				variableDeclaration();
@@ -1979,7 +1980,7 @@ public class SolidityAnnotatedParser extends Parser {
 				setState(410);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
-				while ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << T__29) | (1L << T__42) | (1L << T__46) | (1L << T__58) | (1L << T__59) | (1L << T__60) | (1L << T__61) | (1L << T__62))) != 0) || ((((_la - 96)) & ~0x3f) == 0 && ((1L << (_la - 96)) & ((1L << (Int - 96)) | (1L << (Uint - 96)) | (1L << (Byte - 96)) | (1L << (Fixed - 96)) | (1L << (Ufixed - 96)) | (1L << (Identifier - 96)))) != 0)) {
+				while ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << T__29) | (1L << T__42) | (1L << T__46) | (1L << T__58) | (1L << T__59) | (1L << T__60) | (1L << T__61) | (1L << T__62))) != 0) || ((((_la - 97)) & ~0x3f) == 0 && ((1L << (_la - 97)) & ((1L << (Int - 97)) | (1L << (Uint - 97)) | (1L << (Byte - 97)) | (1L << (Fixed - 97)) | (1L << (Ufixed - 97)) | (1L << (Identifier - 97)))) != 0)) {
 					{
 					{
 					setState(405);
@@ -2404,7 +2405,7 @@ public class SolidityAnnotatedParser extends Parser {
 			setState(461);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
-			while (_la==T__29 || ((((_la - 110)) & ~0x3f) == 0 && ((1L << (_la - 110)) & ((1L << (ConstantKeyword - 110)) | (1L << (ExternalKeyword - 110)) | (1L << (InternalKeyword - 110)) | (1L << (PayableKeyword - 110)) | (1L << (PrivateKeyword - 110)) | (1L << (PublicKeyword - 110)) | (1L << (PureKeyword - 110)) | (1L << (ViewKeyword - 110)) | (1L << (Identifier - 110)))) != 0)) {
+			while (_la==T__29 || ((((_la - 111)) & ~0x3f) == 0 && ((1L << (_la - 111)) & ((1L << (ConstantKeyword - 111)) | (1L << (ExternalKeyword - 111)) | (1L << (InternalKeyword - 111)) | (1L << (PayableKeyword - 111)) | (1L << (PrivateKeyword - 111)) | (1L << (PublicKeyword - 111)) | (1L << (PureKeyword - 111)) | (1L << (ViewKeyword - 111)) | (1L << (Identifier - 111)))) != 0)) {
 				{
 				setState(459);
 				_errHandler.sync(this);
@@ -2700,7 +2701,7 @@ public class SolidityAnnotatedParser extends Parser {
 			setState(498);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
-			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << T__29) | (1L << T__42) | (1L << T__46) | (1L << T__58) | (1L << T__59) | (1L << T__60) | (1L << T__61) | (1L << T__62))) != 0) || ((((_la - 96)) & ~0x3f) == 0 && ((1L << (_la - 96)) & ((1L << (Int - 96)) | (1L << (Uint - 96)) | (1L << (Byte - 96)) | (1L << (Fixed - 96)) | (1L << (Ufixed - 96)) | (1L << (Identifier - 96)))) != 0)) {
+			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << T__29) | (1L << T__42) | (1L << T__46) | (1L << T__58) | (1L << T__59) | (1L << T__60) | (1L << T__61) | (1L << T__62))) != 0) || ((((_la - 97)) & ~0x3f) == 0 && ((1L << (_la - 97)) & ((1L << (Int - 97)) | (1L << (Uint - 97)) | (1L << (Byte - 97)) | (1L << (Fixed - 97)) | (1L << (Ufixed - 97)) | (1L << (Identifier - 97)))) != 0)) {
 				{
 				setState(490);
 				parameter();
@@ -2847,7 +2848,7 @@ public class SolidityAnnotatedParser extends Parser {
 			setState(518);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
-			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << T__29) | (1L << T__42) | (1L << T__46) | (1L << T__58) | (1L << T__59) | (1L << T__60) | (1L << T__61) | (1L << T__62))) != 0) || ((((_la - 96)) & ~0x3f) == 0 && ((1L << (_la - 96)) & ((1L << (Int - 96)) | (1L << (Uint - 96)) | (1L << (Byte - 96)) | (1L << (Fixed - 96)) | (1L << (Ufixed - 96)) | (1L << (Identifier - 96)))) != 0)) {
+			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << T__29) | (1L << T__42) | (1L << T__46) | (1L << T__58) | (1L << T__59) | (1L << T__60) | (1L << T__61) | (1L << T__62))) != 0) || ((((_la - 97)) & ~0x3f) == 0 && ((1L << (_la - 97)) & ((1L << (Int - 97)) | (1L << (Uint - 97)) | (1L << (Byte - 97)) | (1L << (Fixed - 97)) | (1L << (Ufixed - 97)) | (1L << (Identifier - 97)))) != 0)) {
 				{
 				setState(510);
 				eventParameter();
@@ -2992,7 +2993,7 @@ public class SolidityAnnotatedParser extends Parser {
 			setState(538);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
-			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << T__29) | (1L << T__42) | (1L << T__46) | (1L << T__58) | (1L << T__59) | (1L << T__60) | (1L << T__61) | (1L << T__62))) != 0) || ((((_la - 96)) & ~0x3f) == 0 && ((1L << (_la - 96)) & ((1L << (Int - 96)) | (1L << (Uint - 96)) | (1L << (Byte - 96)) | (1L << (Fixed - 96)) | (1L << (Ufixed - 96)) | (1L << (Identifier - 96)))) != 0)) {
+			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << T__29) | (1L << T__42) | (1L << T__46) | (1L << T__58) | (1L << T__59) | (1L << T__60) | (1L << T__61) | (1L << T__62))) != 0) || ((((_la - 97)) & ~0x3f) == 0 && ((1L << (_la - 97)) & ((1L << (Int - 97)) | (1L << (Uint - 97)) | (1L << (Byte - 97)) | (1L << (Fixed - 97)) | (1L << (Ufixed - 97)) | (1L << (Identifier - 97)))) != 0)) {
 				{
 				setState(530);
 				functionTypeParameter();
@@ -3614,7 +3615,7 @@ public class SolidityAnnotatedParser extends Parser {
 			{
 			setState(601);
 			_la = _input.LA(1);
-			if ( !(((((_la - 110)) & ~0x3f) == 0 && ((1L << (_la - 110)) & ((1L << (ConstantKeyword - 110)) | (1L << (PayableKeyword - 110)) | (1L << (PureKeyword - 110)) | (1L << (ViewKeyword - 110)))) != 0)) ) {
+			if ( !(((((_la - 111)) & ~0x3f) == 0 && ((1L << (_la - 111)) & ((1L << (ConstantKeyword - 111)) | (1L << (PayableKeyword - 111)) | (1L << (PureKeyword - 111)) | (1L << (ViewKeyword - 111)))) != 0)) ) {
 			_errHandler.recoverInline(this);
 			}
 			else {
@@ -6155,7 +6156,7 @@ public class SolidityAnnotatedParser extends Parser {
 				setState(894);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
-				if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << T__29) | (1L << T__55) | (1L << T__59) | (1L << T__62))) != 0) || ((((_la - 103)) & ~0x3f) == 0 && ((1L << (_la - 103)) & ((1L << (DecimalNumber - 103)) | (1L << (HexNumber - 103)) | (1L << (HexLiteral - 103)) | (1L << (Identifier - 103)) | (1L << (StringLiteral - 103)))) != 0)) {
+				if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << T__29) | (1L << T__55) | (1L << T__59) | (1L << T__62))) != 0) || ((((_la - 104)) & ~0x3f) == 0 && ((1L << (_la - 104)) & ((1L << (DecimalNumber - 104)) | (1L << (HexNumber - 104)) | (1L << (HexLiteral - 104)) | (1L << (Identifier - 104)) | (1L << (StringLiteral - 104)))) != 0)) {
 					{
 					setState(893);
 					assemblyExpression();
@@ -6990,7 +6991,7 @@ public class SolidityAnnotatedParser extends Parser {
 			{
 			setState(984);
 			_la = _input.LA(1);
-			if ( !(((((_la - 103)) & ~0x3f) == 0 && ((1L << (_la - 103)) & ((1L << (DecimalNumber - 103)) | (1L << (HexNumber - 103)) | (1L << (HexLiteral - 103)) | (1L << (StringLiteral - 103)))) != 0)) ) {
+			if ( !(((((_la - 104)) & ~0x3f) == 0 && ((1L << (_la - 104)) & ((1L << (DecimalNumber - 104)) | (1L << (HexNumber - 104)) | (1L << (HexLiteral - 104)) | (1L << (StringLiteral - 104)))) != 0)) ) {
 			_errHandler.recoverInline(this);
 			}
 			else {
@@ -7504,8 +7505,8 @@ public class SolidityAnnotatedParser extends Parser {
 		"rtvxz|~\u0080\u0082\u0084\u0086\u0088\u008a\u008c\u008e\u0090\u0092\u0094"+
 		"\u0096\u0098\u009a\u009c\u009e\u00a0\u00a2\u00a4\u00a6\u00a8\u00aa\u00ac"+
 		"\u00ae\u00b0\u00b2\u00b4\2\25\3\2\6\7\3\2\r\17\3\2\20\21\3\2\22\25\3\2"+
-		"\26\27\4\2\22\25\32\34\3\2$&\5\2ppttvw\3\2\63\64\5\2ppuuxy\4\2=Abf\3\2"+
-		"BC\3\2EF\4\2\37\37HI\3\2JK\4\2\34\34OX\5\2ijll{{\3\2ij\4\2  zz\2\u045d"+
+		"\26\27\4\2\22\25\32\34\3\2$&\5\2qquuwx\3\2\63\64\5\2qqvvyz\4\2=Acg\3\2"+
+		"BC\3\2EF\4\2\37\37HI\3\2JK\4\2\34\34OX\5\2jkmm||\3\2jk\4\2  {{\2\u045d"+
 		"\2\u00bf\3\2\2\2\4\u00c1\3\2\2\2\6\u00d9\3\2\2\2\b\u00f7\3\2\2\2\n\u0106"+
 		"\3\2\2\2\f\u0108\3\2\2\2\16\u010a\3\2\2\2\20\u010c\3\2\2\2\22\u0113\3"+
 		"\2\2\2\24\u0118\3\2\2\2\26\u011d\3\2\2\2\30\u0121\3\2\2\2\32\u0123\3\2"+
@@ -7567,20 +7568,20 @@ public class SolidityAnnotatedParser extends Parser {
 		"\2\u0121\u0120\3\2\2\2\u0122\31\3\2\2\2\u0123\u0125\5\36\20\2\u0124\u0126"+
 		"\5\36\20\2\u0125\u0124\3\2\2\2\u0125\u0126\3\2\2\2\u0126\33\3\2\2\2\u0127"+
 		"\u0128\t\7\2\2\u0128\35\3\2\2\2\u0129\u012b\5\34\17\2\u012a\u0129\3\2"+
-		"\2\2\u012a\u012b\3\2\2\2\u012b\u012c\3\2\2\2\u012c\u012d\7g\2\2\u012d"+
+		"\2\2\u012a\u012b\3\2\2\2\u012b\u012c\3\2\2\2\u012c\u012d\7h\2\2\u012d"+
 		"\37\3\2\2\2\u012e\u0131\5\u00b4[\2\u012f\u0130\7\35\2\2\u0130\u0132\5"+
 		"\u00b4[\2\u0131\u012f\3\2\2\2\u0131\u0132\3\2\2\2\u0132!\3\2\2\2\u0133"+
-		"\u0134\7\36\2\2\u0134\u0137\7{\2\2\u0135\u0136\7\35\2\2\u0136\u0138\5"+
+		"\u0134\7\36\2\2\u0134\u0137\7|\2\2\u0135\u0136\7\35\2\2\u0136\u0138\5"+
 		"\u00b4[\2\u0137\u0135\3\2\2\2\u0137\u0138\3\2\2\2\u0138\u0139\3\2\2\2"+
 		"\u0139\u0156\7\31\2\2\u013a\u013d\7\36\2\2\u013b\u013e\7\37\2\2\u013c"+
 		"\u013e\5\u00b4[\2\u013d\u013b\3\2\2\2\u013d\u013c\3\2\2\2\u013e\u0141"+
 		"\3\2\2\2\u013f\u0140\7\35\2\2\u0140\u0142\5\u00b4[\2\u0141\u013f\3\2\2"+
 		"\2\u0141\u0142\3\2\2\2\u0142\u0143\3\2\2\2\u0143\u0144\7 \2\2\u0144\u0145"+
-		"\7{\2\2\u0145\u0156\7\31\2\2\u0146\u0147\7\36\2\2\u0147\u0148\7!\2\2\u0148"+
+		"\7|\2\2\u0145\u0156\7\31\2\2\u0146\u0147\7\36\2\2\u0147\u0148\7!\2\2\u0148"+
 		"\u014d\5 \21\2\u0149\u014a\7\"\2\2\u014a\u014c\5 \21\2\u014b\u0149\3\2"+
 		"\2\2\u014c\u014f\3\2\2\2\u014d\u014b\3\2\2\2\u014d\u014e\3\2\2\2\u014e"+
 		"\u0150\3\2\2\2\u014f\u014d\3\2\2\2\u0150\u0151\7#\2\2\u0151\u0152\7 \2"+
-		"\2\u0152\u0153\7{\2\2\u0153\u0154\7\31\2\2\u0154\u0156\3\2\2\2\u0155\u0133"+
+		"\2\u0152\u0153\7|\2\2\u0153\u0154\7\31\2\2\u0154\u0156\3\2\2\2\u0155\u0133"+
 		"\3\2\2\2\u0155\u013a\3\2\2\2\u0155\u0146\3\2\2\2\u0156#\3\2\2\2\u0157"+
 		"\u0158\t\b\2\2\u0158\u0162\5\u00b4[\2\u0159\u015a\7\'\2\2\u015a\u015f"+
 		"\5&\24\2\u015b\u015c\7\"\2\2\u015c\u015e\5&\24\2\u015d\u015b\3\2\2\2\u015e"+
@@ -7618,12 +7619,12 @@ public class SolidityAnnotatedParser extends Parser {
 		"\u01bf\u01c2\3\2\2\2\u01c0\u01c3\7\31\2\2\u01c1\u01c3\5Z.\2\u01c2\u01c0"+
 		"\3\2\2\2\u01c2\u01c1\3\2\2\2\u01c3\65\3\2\2\2\u01c4\u01c5\7.\2\2\u01c5"+
 		"\u01c6\5@!\2\u01c6\67\3\2\2\2\u01c7\u01ce\5\62\32\2\u01c8\u01ce\5X-\2"+
-		"\u01c9\u01ce\7r\2\2\u01ca\u01ce\7w\2\2\u01cb\u01ce\7t\2\2\u01cc\u01ce"+
-		"\7v\2\2\u01cd\u01c7\3\2\2\2\u01cd\u01c8\3\2\2\2\u01cd\u01c9\3\2\2\2\u01cd"+
+		"\u01c9\u01ce\7s\2\2\u01ca\u01ce\7x\2\2\u01cb\u01ce\7u\2\2\u01cc\u01ce"+
+		"\7w\2\2\u01cd\u01c7\3\2\2\2\u01cd\u01c8\3\2\2\2\u01cd\u01c9\3\2\2\2\u01cd"+
 		"\u01ca\3\2\2\2\u01cd\u01cb\3\2\2\2\u01cd\u01cc\3\2\2\2\u01ce\u01d1\3\2"+
 		"\2\2\u01cf\u01cd\3\2\2\2\u01cf\u01d0\3\2\2\2\u01d09\3\2\2\2\u01d1\u01cf"+
 		"\3\2\2\2\u01d2\u01d3\7/\2\2\u01d3\u01d4\5\u00b4[\2\u01d4\u01d6\5D#\2\u01d5"+
-		"\u01d7\7n\2\2\u01d6\u01d5\3\2\2\2\u01d6\u01d7\3\2\2\2\u01d7\u01d8\3\2"+
+		"\u01d7\7o\2\2\u01d6\u01d5\3\2\2\2\u01d6\u01d7\3\2\2\2\u01d7\u01d8\3\2"+
 		"\2\2\u01d8\u01d9\7\31\2\2\u01d9;\3\2\2\2\u01da\u01db\5\u00b4[\2\u01db"+
 		"=\3\2\2\2\u01dc\u01dd\7\60\2\2\u01dd\u01de\5\u00b4[\2\u01de\u01e0\7!\2"+
 		"\2\u01df\u01e1\5<\37\2\u01e0\u01df\3\2\2\2\u01e0\u01e1\3\2\2\2\u01e1\u01e6"+
@@ -7641,7 +7642,7 @@ public class SolidityAnnotatedParser extends Parser {
 		"\3\2\2\2\u0205\u0203\3\2\2\2\u0205\u0206\3\2\2\2\u0206\u0209\3\2\2\2\u0207"+
 		"\u0205\3\2\2\2\u0208\u0200\3\2\2\2\u0208\u0209\3\2\2\2\u0209\u020a\3\2"+
 		"\2\2\u020a\u020b\7\4\2\2\u020bE\3\2\2\2\u020c\u020e\5N(\2\u020d\u020f"+
-		"\7s\2\2\u020e\u020d\3\2\2\2\u020e\u020f\3\2\2\2\u020f\u0211\3\2\2\2\u0210"+
+		"\7t\2\2\u020e\u020d\3\2\2\2\u020e\u020f\3\2\2\2\u020f\u0211\3\2\2\2\u0210"+
 		"\u0212\5\u00b4[\2\u0211\u0210\3\2\2\2\u0211\u0212\3\2\2\2\u0212G\3\2\2"+
 		"\2\u0213\u021c\7\3\2\2\u0214\u0219\5J&\2\u0215\u0216\7\"\2\2\u0216\u0218"+
 		"\5J&\2\u0217\u0215\3\2\2\2\u0218\u021b\3\2\2\2\u0219\u0217\3\2\2\2\u0219"+
@@ -7661,7 +7662,7 @@ public class SolidityAnnotatedParser extends Parser {
 		"\2\u0241\u023f\3\2\2\2\u0241\u0242\3\2\2\2\u0242Q\3\2\2\2\u0243\u0241"+
 		"\3\2\2\2\u0244\u0245\7\61\2\2\u0245\u0246\7\3\2\2\u0246\u0247\5z>\2\u0247"+
 		"\u0248\7\62\2\2\u0248\u0249\5N(\2\u0249\u024a\7\4\2\2\u024aS\3\2\2\2\u024b"+
-		"\u024c\7-\2\2\u024c\u0252\5H%\2\u024d\u0251\7t\2\2\u024e\u0251\7r\2\2"+
+		"\u024c\7-\2\2\u024c\u0252\5H%\2\u024d\u0251\7u\2\2\u024e\u0251\7s\2\2"+
 		"\u024f\u0251\5X-\2\u0250\u024d\3\2\2\2\u0250\u024e\3\2\2\2\u0250\u024f"+
 		"\3\2\2\2\u0251\u0254\3\2\2\2\u0252\u0250\3\2\2\2\u0252\u0253\3\2\2\2\u0253"+
 		"\u0257\3\2\2\2\u0254\u0252\3\2\2\2\u0255\u0256\7.\2\2\u0256\u0258\5H%"+
@@ -7688,11 +7689,11 @@ public class SolidityAnnotatedParser extends Parser {
 		"\u0290\3\2\2\2\u0291\u0292\3\2\2\2\u0292\u0293\3\2\2\2\u0293\u0295\7\31"+
 		"\2\2\u0294\u0296\5|?\2\u0295\u0294\3\2\2\2\u0295\u0296\3\2\2\2\u0296\u0297"+
 		"\3\2\2\2\u0297\u0298\7\4\2\2\u0298\u0299\5\\/\2\u0299g\3\2\2\2\u029a\u029c"+
-		"\78\2\2\u029b\u029d\7{\2\2\u029c\u029b\3\2\2\2\u029c\u029d\3\2\2\2\u029d"+
+		"\78\2\2\u029b\u029d\7|\2\2\u029c\u029b\3\2\2\2\u029c\u029d\3\2\2\2\u029d"+
 		"\u029e\3\2\2\2\u029e\u029f\5\u008aF\2\u029fi\3\2\2\2\u02a0\u02a1\79\2"+
 		"\2\u02a1\u02a2\5\\/\2\u02a2\u02a3\7\67\2\2\u02a3\u02a4\7\3\2\2\u02a4\u02a5"+
 		"\5|?\2\u02a5\u02a6\7\4\2\2\u02a6\u02a7\7\31\2\2\u02a7k\3\2\2\2\u02a8\u02a9"+
-		"\7q\2\2\u02a9\u02aa\7\31\2\2\u02aam\3\2\2\2\u02ab\u02ac\7o\2\2\u02ac\u02ad"+
+		"\7r\2\2\u02a9\u02aa\7\31\2\2\u02aam\3\2\2\2\u02ab\u02ac\7p\2\2\u02ac\u02ad"+
 		"\7\31\2\2\u02ado\3\2\2\2\u02ae\u02b0\7:\2\2\u02af\u02b1\5|?\2\u02b0\u02af"+
 		"\3\2\2\2\u02b0\u02b1\3\2\2\2\u02b1\u02b2\3\2\2\2\u02b2\u02b3\7\31\2\2"+
 		"\u02b3q\3\2\2\2\u02b4\u02b5\7;\2\2\u02b5\u02b6\7\31\2\2\u02b6s\3\2\2\2"+
@@ -7736,7 +7737,7 @@ public class SolidityAnnotatedParser extends Parser {
 		"\2\2\u0324\u0312\3\2\2\2\u0324\u0315\3\2\2\2\u0324\u0317\3\2\2\2\u0324"+
 		"\u031c\3\2\2\2\u0324\u0321\3\2\2\2\u0325\u0328\3\2\2\2\u0326\u0324\3\2"+
 		"\2\2\u0326\u0327\3\2\2\2\u0327}\3\2\2\2\u0328\u0326\3\2\2\2\u0329\u0331"+
-		"\7h\2\2\u032a\u0331\5\u00b2Z\2\u032b\u0331\7l\2\2\u032c\u0331\7{\2\2\u032d"+
+		"\7i\2\2\u032a\u0331\5\u00b2Z\2\u032b\u0331\7m\2\2\u032c\u0331\7|\2\2\u032d"+
 		"\u0331\5\u00b4[\2\u032e\u0331\5\u00aeX\2\u032f\u0331\5\u00b0Y\2\u0330"+
 		"\u0329\3\2\2\2\u0330\u032a\3\2\2\2\u0330\u032b\3\2\2\2\u0330\u032c\3\2"+
 		"\2\2\u0330\u032d\3\2\2\2\u0330\u032e\3\2\2\2\u0330\u032f\3\2\2\2\u0331"+
@@ -7759,8 +7760,8 @@ public class SolidityAnnotatedParser extends Parser {
 		"F\2\u0363\u0373\5\u008eH\2\u0364\u0373\5\u0092J\2\u0365\u0373\5\u0094"+
 		"K\2\u0366\u0373\5\u009aN\2\u0367\u0373\5\u009cO\2\u0368\u0373\5\u009e"+
 		"P\2\u0369\u0373\5\u00a2R\2\u036a\u0373\5\u00a6T\2\u036b\u0373\5\u00a8"+
-		"U\2\u036c\u0373\7o\2\2\u036d\u0373\7q\2\2\u036e\u0373\5\u00acW\2\u036f"+
-		"\u0373\5\u00b2Z\2\u0370\u0373\7{\2\2\u0371\u0373\7l\2\2\u0372\u0361\3"+
+		"U\2\u036c\u0373\7p\2\2\u036d\u0373\7r\2\2\u036e\u0373\5\u00acW\2\u036f"+
+		"\u0373\5\u00b2Z\2\u0370\u0373\7|\2\2\u0371\u0373\7m\2\2\u0372\u0361\3"+
 		"\2\2\2\u0372\u0362\3\2\2\2\u0372\u0363\3\2\2\2\u0372\u0364\3\2\2\2\u0372"+
 		"\u0365\3\2\2\2\u0372\u0366\3\2\2\2\u0372\u0367\3\2\2\2\u0372\u0368\3\2"+
 		"\2\2\u0372\u0369\3\2\2\2\u0372\u036a\3\2\2\2\u0372\u036b\3\2\2\2\u0372"+
@@ -7812,7 +7813,7 @@ public class SolidityAnnotatedParser extends Parser {
 		"\u03f5\3\2\2\2\u03f5\u03f8\3\2\2\2\u03f6\u03f4\3\2\2\2\u03f7\u03ef\3\2"+
 		"\2\2\u03f7\u03f8\3\2\2\2\u03f8\u03f9\3\2\2\2\u03f9\u03fb\7\13\2\2\u03fa"+
 		"\u03e0\3\2\2\2\u03fa\u03ee\3\2\2\2\u03fb\u00af\3\2\2\2\u03fc\u03fd\5z"+
-		">\2\u03fd\u00b1\3\2\2\2\u03fe\u0400\t\23\2\2\u03ff\u0401\7k\2\2\u0400"+
+		">\2\u03fd\u00b1\3\2\2\2\u03fe\u0400\t\23\2\2\u03ff\u0401\7l\2\2\u0400"+
 		"\u03ff\3\2\2\2\u0400\u0401\3\2\2\2\u0401\u00b3\3\2\2\2\u0402\u0403\t\24"+
 		"\2\2\u0403\u00b5\3\2\2\2l\u00bf\u00d2\u00d9\u00eb\u00ed\u00f7\u0101\u0103"+
 		"\u0111\u0113\u0121\u0125\u012a\u0131\u0137\u013d\u0141\u014d\u0155\u015f"+
