@@ -61,3 +61,6 @@ integerOpInteger
 // Remove '@' from first position of LINE_COMMENT token. 
 LINE_COMMENT 
   : '//' ~[@] ~[\r\n]* -> channel(HIDDEN);
+// Send whitespace to channel hidden.
+WS
+  : [ \t\r\n\u000C]+ -> channel(HIDDEN);
