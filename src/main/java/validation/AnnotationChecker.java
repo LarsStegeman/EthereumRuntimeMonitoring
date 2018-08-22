@@ -1,10 +1,12 @@
 package validation;
 
+
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import generated.SolidityAnnotatedBaseVisitor;
 import generated.SolidityAnnotatedParser.AnnotationDefinitionContext;
 import generated.SolidityAnnotatedParser.ContractDefinitionContext;
+import utils.ErrorListener;
 
 
 /*  This class checks the following properties
@@ -13,10 +15,12 @@ import generated.SolidityAnnotatedParser.ContractDefinitionContext;
 */
 public class AnnotationChecker extends SolidityAnnotatedBaseVisitor<Void>{
     ValidationInformation info;
+    ErrorListener listener;
 
-    public AnnotationChecker(ValidationInformation info){
+    public AnnotationChecker(ValidationInformation info, ErrorListener listener){
         System.out.println("AnnotationChecker created");
         this.info = info;
+        this.listener = listener;
     }
 
     public String getNextFunction(ParseTree tree){
@@ -50,18 +54,13 @@ public class AnnotationChecker extends SolidityAnnotatedBaseVisitor<Void>{
             functionReference = getNextFunction(ctx);
         }
 
-        TypeChecker checker = new TypeChecker(info, functionReference);
+        TypeChecker checker = new TypeChecker(info, functionReference, listener);
         SolidityType type = checker.visit(ctx.annotationExpression());
         if(type != SolidityType.BOOL){
             //Log error
-            System.out.println("Error annotation not of type boolean but is: " + type);
+            listener.validateError(ctx,"Expected type 'bool' at %s but is %s", ctx.getText(), type);;
         }
-        //Check for additional errors
-        if(checker.hasErrors()){
-            for (String error : checker.getErrors()) {
-                System.out.println(error);
-            }
-        }
+       
         return null;
     }
 

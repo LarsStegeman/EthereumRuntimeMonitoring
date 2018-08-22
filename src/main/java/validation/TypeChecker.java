@@ -1,27 +1,25 @@
 package validation;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.antlr.v4.runtime.ParserRuleContext;
-import org.antlr.v4.runtime.Token;
 
 import generated.SolidityAnnotatedBaseVisitor;
 import generated.SolidityAnnotatedParser.AnnotationExpressionContext;
 import generated.SolidityAnnotatedParser.IdentifierContext;
 import generated.SolidityAnnotatedParser.PrimaryAnnotationExpressionContext;
 import generated.SolidityAnnotatedParser.PrimaryExpressionContext;
+import utils.ErrorListener;
 
 public class TypeChecker extends SolidityAnnotatedBaseVisitor<SolidityType>{
   
     ValidationInformation vi;
     private String functionReference;
-	private List<String> errors;
+    ErrorListener listener;
 
-    public TypeChecker(ValidationInformation info, String functionReference){
+
+    public TypeChecker(ValidationInformation info, String functionReference, ErrorListener listener){
         this.vi = info;
         this.functionReference = functionReference;
-        errors = new ArrayList<>();
+        this.listener = listener;
     }
 
     @Override
@@ -162,30 +160,7 @@ public class TypeChecker extends SolidityAnnotatedBaseVisitor<SolidityType>{
         }
     }
 
-
-    //Error handling
-	/** Indicates if any errors were encountered in this tree listener. */
-	public boolean hasErrors() {
-		return !getErrors().isEmpty();
-	}
-
-	/** Returns the list of errors collected in this tree listener. */
-	public List<String> getErrors() {
-		return this.errors;
+    public void addError(ParserRuleContext node, String message, Object... args){
+        listener.validateError(node, message, args);
     }
-
-    private void addError(Token token, String message, Object... args) {
-		int line = token.getLine();
-		int column = token.getCharPositionInLine();
-		message = String.format(message, args);
-		message = String.format("Line %d:%d - %s", line, column, message);
-		this.errors.add(message);
-    }
-    
-    private void addError(ParserRuleContext node, String message, Object... args) {
-        addError(node.getStart(), message, args);
-    }
-
-
-
 }

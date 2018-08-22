@@ -5,45 +5,32 @@ import org.antlr.v4.runtime.TokenStreamRewriter;
 import generated.SolidityAnnotatedBaseVisitor;
 import generated.SolidityAnnotatedParser.AnnotationDefinitionContext;
 import generated.SolidityAnnotatedParser.AnnotationExpressionContext;
-import generated.SolidityAnnotatedParser.SourceUnitContext;
 
 public class SolidityPrinter extends SolidityAnnotatedBaseVisitor<String>{
 
     private  int currentAnnotation;
-    private StringBuilder program;
     private TokenStreamRewriter rewriter;
 
     public SolidityPrinter(TokenStreamRewriter rewriter){
-        program = new StringBuilder();
         this.rewriter = rewriter;
-    }
-
-    @Override
-    public String visitSourceUnit(SourceUnitContext ctx){
-        //System.out.println(ctx.getText());
-        visit(ctx.contractDefinition(0));
-        return null;
     }
 
     @Override
     public String visitAnnotationDefinition(AnnotationDefinitionContext ctx){
         //For each annotation we must create a modifier
-        String modifier = "modifier annotation" + currentAnnotation + "{";
+        String modifier = "\n   ";
+        modifier +="modifier annotation" + currentAnnotation + "{";
         String expression = visit(ctx.annotationExpression());
         expression = formatExpression(expression);
         if(ctx.AnnotationKind().toString().equals("inv")){
-            modifier+=expression;
-            modifier+="_;";
-            modifier+=expression;
+            modifier+="\n   " + expression + "\n    _;\n    " + expression + "\n";
         }else if(ctx.AnnotationKind().toString().equals("pre")){
-            modifier+=expression;
-            modifier+="_;";
+            modifier+="\n   " + expression + "\n    _;\n";
         }else{
-            modifier+="_;";
-            modifier+=expression;
+            modifier+="\n    _;\n    " + expression + "\n";
         }
-        modifier+= "}\n";
-        rewriter.insertAfter(ctx.start, modifier);
+        modifier+= "    }\n";
+        rewriter.insertAfter(ctx.stop, modifier);
         currentAnnotation++;
         return null;
     }
