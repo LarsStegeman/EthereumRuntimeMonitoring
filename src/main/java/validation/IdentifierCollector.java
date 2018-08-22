@@ -21,6 +21,7 @@ public class IdentifierCollector extends SolidityAnnotatedBaseVisitor<Void>{
     public IdentifierCollector(ValidationInformation info){
         this.info = info;
         System.out.println("IdentifierCollector created");
+        addGlobalIdentifiers();
     }
 
     @Override
@@ -92,6 +93,31 @@ public class IdentifierCollector extends SolidityAnnotatedBaseVisitor<Void>{
             current = current.typeName();
         }
         info.addArray(identifier, depth,getType(current.getText()), ctx.typeName().getText());
+    }
+
+    // Adds global identifiers to the ValidationInformation object.
+    private void addGlobalIdentifiers(){
+        //Block
+        SolidityVariable[] blockArray = {
+            new SolidityVariable("coinbase",    SolidityType.ADDRESS,   null),
+            new SolidityVariable("difficulty",  SolidityType.INTEGER,   null),
+            new SolidityVariable("gaslimit",    SolidityType.INTEGER,   null),
+            new SolidityVariable("number",      SolidityType.INTEGER,   null),
+            new SolidityVariable("timestamp",   SolidityType.INTEGER,   null)
+        };
+        info.addStruct("block", blockArray);
+        info.addIdentifier("block", SolidityType.STRUCT, "block");
+
+        //Msg
+        SolidityVariable[] msgArray = {
+            new SolidityVariable("data",    SolidityType.BYTE,      null),
+            new SolidityVariable("gas",     SolidityType.INTEGER,   null),
+            new SolidityVariable("sender",  SolidityType.ADDRESS,   null),
+            new SolidityVariable("sig",     SolidityType.BYTE,      null),
+            new SolidityVariable("value",   SolidityType.INTEGER,   null)
+        };
+        info.addStruct("msg", msgArray);
+        info.addIdentifier("msg", SolidityType.STRUCT, "msg");
     }
 
     /*
