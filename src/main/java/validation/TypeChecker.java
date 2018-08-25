@@ -7,6 +7,7 @@ import generated.SolidityAnnotatedParser.AnnotationExpressionContext;
 import generated.SolidityAnnotatedParser.IdentifierContext;
 import generated.SolidityAnnotatedParser.PrimaryAnnotationExpressionContext;
 import generated.SolidityAnnotatedParser.PrimaryExpressionContext;
+import generation.AnnotationInformation;
 import utils.ErrorListener;
 
 public class TypeChecker extends SolidityAnnotatedBaseVisitor<SolidityType>{
@@ -14,12 +15,14 @@ public class TypeChecker extends SolidityAnnotatedBaseVisitor<SolidityType>{
     ValidationInformation vi;
     private String functionReference;
     ErrorListener listener;
+    private AnnotationInformation annotationInformation;
 
 
-    public TypeChecker(ValidationInformation info, String functionReference, ErrorListener listener){
+    public TypeChecker(ValidationInformation info, String functionReference, ErrorListener listener, AnnotationInformation annotationInformation){
         this.vi = info;
         this.functionReference = functionReference;
         this.listener = listener;
+        this.annotationInformation = annotationInformation;
     }
 
     @Override
@@ -153,6 +156,7 @@ public class TypeChecker extends SolidityAnnotatedBaseVisitor<SolidityType>{
     public SolidityType visitIdentifier(IdentifierContext ctx){
         SolidityVariable var = vi.getIdentifier(ctx.getText(), functionReference);
         if(var != null){
+            annotationInformation.addVariable(var.name);
             return var.type;
         }else{
             addError(ctx, "Identifier %s in annotation not defined as variable", ctx.getText());

@@ -2,6 +2,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.List;
 
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
@@ -12,11 +13,12 @@ import org.antlr.v4.runtime.tree.ParseTree;
 
 import generated.SolidityAnnotatedLexer;
 import generated.SolidityAnnotatedParser;
+import generation.AnnotationInformation;
 import generation.SolidityPrinter;
+import utils.ErrorListener;
 import validation.AnnotationChecker;
 import validation.IdentifierCollector;
 import validation.ValidationInformation;
-import utils.ErrorListener;
 
 public class SolidityAnnotation{
 	private File file;
@@ -52,14 +54,14 @@ public class SolidityAnnotation{
 		}
 
 		// Validation
-		validateProgram(tree, listener);
+		List<AnnotationInformation> info = validateProgram(tree, listener);
 		if(listener.hasErrors()){
 			listener.printErrors();
-			return;
+			//return;
 		}
 
 		// Generation
-		String result = generateProgram(tree);
+		String result = generateProgram(tree, info);
 		// Print to file
 		printFile(getOutputFileName(file.getName()), result);
 	}
@@ -84,18 +86,19 @@ public class SolidityAnnotation{
 		return parser.sourceUnit();
 	}
 
-	public void validateProgram(ParseTree tree, ErrorListener listener){
+	public List<AnnotationInformation> validateProgram(ParseTree tree, ErrorListener listener){
 		ValidationInformation infoObj = new ValidationInformation();
 		IdentifierCollector col = new IdentifierCollector(infoObj);
 		col.visit(tree);
 		AnnotationChecker checker = new AnnotationChecker(infoObj, listener);
 		checker.visit(tree);
+		return checker.getAnnotationsInformation();
 	}
 
-	public String generateProgram(ParseTree tree){	
+	public String generateProgram(ParseTree tree, List<AnnotationInformation> info){	
 		//Generation
 		TokenStreamRewriter rewriter = new TokenStreamRewriter(tokens);
-		SolidityPrinter printer = new SolidityPrinter(rewriter);
+		SolidityPrinter printer = new SolidityPrinter(rewriter, info);
 		printer.visit(tree);
 		//Rewriter has the added annotations
 		return rewriter.getText();

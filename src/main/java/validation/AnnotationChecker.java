@@ -1,11 +1,15 @@
 package validation;
 
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import generated.SolidityAnnotatedBaseVisitor;
 import generated.SolidityAnnotatedParser.AnnotationDefinitionContext;
 import generated.SolidityAnnotatedParser.ContractDefinitionContext;
+import generation.AnnotationInformation;
 import utils.ErrorListener;
 
 
@@ -14,13 +18,16 @@ import utils.ErrorListener;
         - TODO
 */
 public class AnnotationChecker extends SolidityAnnotatedBaseVisitor<Void>{
-    ValidationInformation info;
-    ErrorListener listener;
+    private ValidationInformation info;
+    private ErrorListener listener;
+    private List<AnnotationInformation> annotationsInformation;
+    private int annotationNumber;
 
     public AnnotationChecker(ValidationInformation info, ErrorListener listener){
         System.out.println("AnnotationChecker created");
         this.info = info;
         this.listener = listener;
+        this.annotationsInformation = new ArrayList<>();
     }
 
     public String getNextFunction(ParseTree tree){
@@ -53,16 +60,22 @@ public class AnnotationChecker extends SolidityAnnotatedBaseVisitor<Void>{
         if(!ctx.AnnotationKind().toString().equals("inv")){
             functionReference = getNextFunction(ctx);
         }
+        AnnotationInformation currentAnnotation = new AnnotationInformation(ctx, "annotation" + annotationNumber, functionReference);
 
-        TypeChecker checker = new TypeChecker(info, functionReference, listener);
+        TypeChecker checker = new TypeChecker(info, functionReference, listener, currentAnnotation);
         SolidityType type = checker.visit(ctx.annotationExpression());
         if(type != SolidityType.BOOL){
             //Log error
             listener.validateError(ctx,"Expected type 'bool' at %s but is %s", ctx.getText(), type);;
         }
-       
+
+
+        annotationsInformation.add(currentAnnotation);
+        annotationNumber++;
         return null;
     }
 
-
+    public List<AnnotationInformation> getAnnotationsInformation(){
+        return this.annotationsInformation;
+    }
 }
