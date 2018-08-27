@@ -16,6 +16,7 @@ public class TypeChecker extends SolidityAnnotatedBaseVisitor<SolidityType>{
     private String functionReference;
     ErrorListener listener;
     private AnnotationInformation annotationInformation;
+    private boolean isOld = false;
 
 
     public TypeChecker(ValidationInformation info, String functionReference, ErrorListener listener, AnnotationInformation annotationInformation){
@@ -83,6 +84,7 @@ public class TypeChecker extends SolidityAnnotatedBaseVisitor<SolidityType>{
         if(ctx.primaryExpression() != null && ctx.primaryAnnotationExpression() == null){
             result = visit(ctx.primaryExpression());
         }else if(ctx.primaryAnnotationExpression() != null && ctx.primaryExpression() == null && ctx.identifier() == null){
+            isOld = true;
             result = visit(ctx.primaryAnnotationExpression());
         }else{
             //Case of mapping/array/struct
@@ -100,6 +102,12 @@ public class TypeChecker extends SolidityAnnotatedBaseVisitor<SolidityType>{
             current = current.primaryAnnotationExpression();
         }
         SolidityVariable var = vi.getIdentifier(current.getText(), functionReference);
+        if(isOld){
+            annotationInformation.addVariable(var.getOldSolidityVariable());
+        }else{
+            annotationInformation.addVariable(var);
+        }
+        isOld = false;
         
         // Now validate the rest of the structure, from the bottom up
         // For each type of complex structure.
@@ -156,7 +164,12 @@ public class TypeChecker extends SolidityAnnotatedBaseVisitor<SolidityType>{
     public SolidityType visitIdentifier(IdentifierContext ctx){
         SolidityVariable var = vi.getIdentifier(ctx.getText(), functionReference);
         if(var != null){
-            annotationInformation.addVariable(var.name);
+            if(isOld){
+                annotationInformation.addVariable(var.getOldSolidityVariable());
+            }else{
+                annotationInformation.addVariable(var);
+            }
+            isOld = false;
             return var.type;
         }else{
             addError(ctx, "Identifier %s in annotation not defined as variable", ctx.getText());

@@ -13,6 +13,8 @@ import generated.SolidityAnnotatedParser.AnnotationDefinitionContext;
 import generated.SolidityAnnotatedParser.AnnotationExpressionContext;
 import generated.SolidityAnnotatedParser.FunctionDefinitionContext;
 import generated.SolidityAnnotatedParser.ParameterContext;
+import generated.SolidityAnnotatedParser.PrimaryAnnotationExpressionContext;
+import validation.SolidityVariable;
 
 public class SolidityPrinter extends SolidityAnnotatedBaseVisitor<String>{
 
@@ -33,19 +35,65 @@ public class SolidityPrinter extends SolidityAnnotatedBaseVisitor<String>{
         AnnotationInformation current = findAnnotationInfo(ctx);
         String annotationParameters = new String();
         if(!current.getType().equals("inv")){
-            //annotationParameters += 
+            for(SolidityVariable var: current.getVariables()){
+                annotationParameters +=  ", " + var.getTypeString() + " " + var.name; 
+            }
+            annotationParameters = annotationParameters.substring(2);
         }
-        modifier +="function " + current.getName() + "() private{ \n";
         String expression = visit(ctx.annotationExpression());
         expression = formatExpression(expression);
+
+        modifier +="function " + current.getName() + "(" + annotationParameters + ") private{ \n";
         modifier += "   " + expression + "\n";
-        modifier+= "    }\n";
+        modifier += "    }\n";
         rewriter.insertAfter(ctx.stop, modifier);
         return null;
     }
 
     @Override
     public String visitAnnotationExpression(AnnotationExpressionContext ctx){
+        String result = new String();
+        if(ctx.primaryAnnotationExpression() != null){
+            result = visit(ctx.primaryAnnotationExpression());
+        }else if(ctx.annotationExpression().size() == 1){
+            // case of ! 'expr'
+            if(ctx.getStart().getText().equals("!")){
+                result = "! " + visit(ctx.annotationExpression(0));
+            }else{
+                result =  "(" + visit(ctx.primaryAnnotationExpression()) + " )";
+            }   
+        }else{
+            // First visit children and get their type
+            String exp1 = this.visit(ctx.annotationExpression(0));
+            String exp2 = this.visit(ctx.annotationExpression(1));
+            //Different cases for annotationExpression
+            if(ctx.booleanOp() != null){
+                if(ctx.booleanOp().getText().equals("->")){
+                    result = "!" + exp1 + "||" + exp2; 
+                }else{
+                    result = exp1 + ctx.booleanOp().getText() + exp2;
+                }
+            }else if(ctx.compareOp() != null){
+                result = exp1 + ctx.compareOp().getText() + exp2;
+            }else if(ctx.integerOpBoolean() != null){
+                result = exp1 + ctx.integerOpBoolean().getText() + exp2;
+            }else if(ctx.integerOpInteger() != null){
+                result = exp1 + ctx.integerOpInteger().getText() + exp2;
+            }
+        }
+        return result;
+    }
+
+    @Override
+    public String visitPrimaryAnnotationExpression(PrimaryAnnotationExpressionContext ctx){
+        if(ctx.primaryAnnotationExpression() != null && ctx.primaryExpression() == null && ctx.identifier() == null){
+            PrimaryAnnotationExpressionContext current = ctx.primaryAnnotationExpression();
+            while(current.primaryAnnotationExpression() != null){
+                current = current.primaryAnnotationExpression();
+            }
+            //Get the base definition and add _old for the identifier, then add the rest of the expression.
+            return current.getText() + "_old" + ctx.primaryAnnotationExpression().getText().substring(current.getText().length());
+        }
         return ctx.getText();
     }
 
@@ -79,18 +127,34 @@ public class SolidityPrinter extends SolidityAnnotatedBaseVisitor<String>{
         }
 
         //Store \old parameters and pass on function arguments
-
-
-        if(hasReturnParameters){
-            newFunction+= "\n        " + functionReturn  + " = "+ functionNameOriginal+ "_body("+ functionArguments + ");";
-            newFunction+= "\n    return result;\n    ";
-            newFunction+= "\n    }\n    ";    
-        }else{
-            newFunction+= "\n        " + functionNameOriginal+ "_body("+ functionArguments + ");";
-            newFunction+= "\n    }\n    "; 
+        List<AnnotationInformation> allAnnotations = getAllAnnotations(functionNameOriginal);
+        String addBeforeBody = new String("");
+        String addAfterBody = new String("");
+        for(AnnotationInformation current: allAnnotations){
+            String temp =  "    " + current.getName() + "();\n";
+            if(current.getType().equals("inv")){
+                addBeforeBody += temp;
+                addAfterBody += temp;
+            }else if(current.getType().equals("pre")){
+                addBeforeBody += temp;
+            }else{
+                addAfterBody += temp;
+            }
         }
 
-        List<String> allAnnotations = getAllAnnotations(functionNameOriginal);
+        if(hasReturnParameters){
+            newFunction+= addBeforeBody;
+            newFunction+= "\n        " + functionReturn  + " = "+ functionNameOriginal+ "_body("+ functionArguments + ");\n";
+            newFunction+= addAfterBody;
+            newFunction+= "    return result;\n";
+            newFunction+= "    }\n    ";    
+        }else{
+            newFunction+= addBeforeBody;
+            newFunction+= "\n        " + functionNameOriginal+ "_body("+ functionArguments + ");\n";
+            newFunction+= addAfterBody;
+            newFunction+= "    }\n    "; 
+        }
+
         //Find correct token to add the extra function
         Token tkn = ctx.start;
         rewriter.insertBefore(tkn, newFunction);
@@ -113,11 +177,11 @@ public class SolidityPrinter extends SolidityAnnotatedBaseVisitor<String>{
         return null;
     }
 
-    public List<String> getAllAnnotations(String functionName){
-        List<String> modifiers = new ArrayList<>();
+    public List<AnnotationInformation> getAllAnnotations(String functionName){
+        List<AnnotationInformation> modifiers = new ArrayList<>();
         for(AnnotationInformation x: info){
             if(x.getFunction() == null || x.getFunction().equals(functionName)){
-                modifiers.add(x.getName());
+                modifiers.add(x);
             }
         }
         return modifiers;
