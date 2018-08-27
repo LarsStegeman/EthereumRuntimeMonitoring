@@ -9,13 +9,15 @@ public class AnnotationInformation{
     ParserRuleContext node;
     private String name;
     private List<String> variables;
+    private String type;
     private String function;
 
-    public AnnotationInformation(ParserRuleContext ctx, String name, String function){
+    public AnnotationInformation(ParserRuleContext ctx, String name, String type, String function){
         this.variables = new ArrayList<String>();
         this.name = name;
         this.function = function;
         this.node = ctx;
+        this.type = type;
     }
 
     public void addVariable(String varName){
@@ -32,6 +34,10 @@ public class AnnotationInformation{
 
     public String getName(){
         return name;
+    }
+
+    public String getType(){
+        return type;
     }
 
     public ParserRuleContext getNode(){

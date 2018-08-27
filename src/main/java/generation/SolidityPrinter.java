@@ -6,11 +6,13 @@ import java.util.List;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.TokenStreamRewriter;
+import org.antlr.v4.runtime.misc.Interval;
 
 import generated.SolidityAnnotatedBaseVisitor;
 import generated.SolidityAnnotatedParser.AnnotationDefinitionContext;
 import generated.SolidityAnnotatedParser.AnnotationExpressionContext;
 import generated.SolidityAnnotatedParser.FunctionDefinitionContext;
+import generated.SolidityAnnotatedParser.ParameterContext;
 
 public class SolidityPrinter extends SolidityAnnotatedBaseVisitor<String>{
 
@@ -25,20 +27,18 @@ public class SolidityPrinter extends SolidityAnnotatedBaseVisitor<String>{
 
     @Override
     public String visitAnnotationDefinition(AnnotationDefinitionContext ctx){
-        //For each annotation create a modifier
+        //For each annotation create a function
         String modifier = "\n   ";
 
         AnnotationInformation current = findAnnotationInfo(ctx);
-        modifier +="modifier " + current.getName() + "{";
+        String annotationParameters = new String();
+        if(!current.getType().equals("inv")){
+            //annotationParameters += 
+        }
+        modifier +="function " + current.getName() + "() private{ \n";
         String expression = visit(ctx.annotationExpression());
         expression = formatExpression(expression);
-        if(ctx.AnnotationKind().toString().equals("inv")){
-            modifier+="\n   " + expression + "\n    _;\n    " + expression + "\n";
-        }else if(ctx.AnnotationKind().toString().equals("pre")){
-            modifier+="\n   " + expression + "\n    _;\n";
-        }else{
-            modifier+="\n    _;\n    " + expression + "\n";
-        }
+        modifier += "   " + expression + "\n";
         modifier+= "    }\n";
         rewriter.insertAfter(ctx.stop, modifier);
         return null;
@@ -50,16 +50,52 @@ public class SolidityPrinter extends SolidityAnnotatedBaseVisitor<String>{
     }
 
     public String visitFunctionDefinition(FunctionDefinitionContext ctx){
-        // Add correct modifiers to the function, all invariants and post and pre conditions
-        String functionName = ctx.identifier().getText();
-        List<String> allModifiers = getAllModifiers(functionName);
-        String result = new String(" ");
-        for(String current: allModifiers){
-            result += current + " ";
+        // For each function:
+        // - Rename original function to functionName_body
+        // - Create function that calls functionName_body
+        // - Add annotations before and after to new funcion
+        // - Pass through all variables
+        String functionNameOriginal = ctx.identifier().getText();
+        String newFunction = rewriter.getText(new Interval(ctx.start.getTokenIndex(), ctx.block().start.getTokenIndex()));
+
+        //Format function arguments
+        String functionArguments = new String();
+        for(ParameterContext t : ctx.parameterList().parameter()){
+            functionArguments +=  ", " +  t.identifier().getText();
         }
-        //Find correct token to add them
-        Token tkn = ctx.modifierList().stop;
-        rewriter.insertAfter(tkn, result);
+        if(functionArguments.length() > 0){
+            functionArguments = functionArguments.substring(2);
+        }
+
+        //Format function return parameters
+        String functionReturn = new String();
+        boolean hasReturnParameters = false;
+        if(ctx.returnParameters() != null){
+            hasReturnParameters = true;
+            for(ParameterContext t : ctx.returnParameters().parameterList().parameter()){
+                functionReturn+= ", " + t.typeName().getText();
+            }
+            functionReturn = functionReturn.substring(2);
+        }
+
+        //Store \old parameters and pass on function arguments
+
+
+        if(hasReturnParameters){
+            newFunction+= "\n        " + functionReturn  + " = "+ functionNameOriginal+ "_body("+ functionArguments + ");";
+            newFunction+= "\n    return result;\n    ";
+            newFunction+= "\n    }\n    ";    
+        }else{
+            newFunction+= "\n        " + functionNameOriginal+ "_body("+ functionArguments + ");";
+            newFunction+= "\n    }\n    "; 
+        }
+
+        List<String> allAnnotations = getAllAnnotations(functionNameOriginal);
+        //Find correct token to add the extra function
+        Token tkn = ctx.start;
+        rewriter.insertBefore(tkn, newFunction);
+        rewriter.replace(ctx.identifier().start, functionNameOriginal + "_body");
+        rewriter.replace(ctx.modifierList().start,ctx.modifierList().stop, "private");
         return null;
     }
 
@@ -77,7 +113,7 @@ public class SolidityPrinter extends SolidityAnnotatedBaseVisitor<String>{
         return null;
     }
 
-    public List<String> getAllModifiers(String functionName){
+    public List<String> getAllAnnotations(String functionName){
         List<String> modifiers = new ArrayList<>();
         for(AnnotationInformation x: info){
             if(x.getFunction() == null || x.getFunction().equals(functionName)){

@@ -60,7 +60,7 @@ public class AnnotationChecker extends SolidityAnnotatedBaseVisitor<Void>{
         if(!ctx.AnnotationKind().toString().equals("inv")){
             functionReference = getNextFunction(ctx);
         }
-        AnnotationInformation currentAnnotation = new AnnotationInformation(ctx, "annotation" + annotationNumber, functionReference);
+        AnnotationInformation currentAnnotation = new AnnotationInformation(ctx, "annotation" + annotationNumber, ctx.AnnotationKind().toString(),functionReference);
 
         TypeChecker checker = new TypeChecker(info, functionReference, listener, currentAnnotation);
         SolidityType type = checker.visit(ctx.annotationExpression());
@@ -68,7 +68,6 @@ public class AnnotationChecker extends SolidityAnnotatedBaseVisitor<Void>{
             //Log error
             listener.validateError(ctx,"Expected type 'bool' at %s but is %s", ctx.getText(), type);;
         }
-
 
         annotationsInformation.add(currentAnnotation);
         annotationNumber++;
