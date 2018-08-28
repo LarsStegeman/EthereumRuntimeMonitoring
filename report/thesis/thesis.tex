@@ -39,8 +39,19 @@
 \section{Introduction}
 
 \section{Solidity}
+Section explains basics of solidity in order to understand the rest of the paper. Same section as in ResearchTopics
 
 \section{Tool Overview}
+\begin{itemize}
+  \item Tool works in two phases validation and generation.
+  \item Validation typechecks and checks if annotations are well formed according to grammar.
+  \item Generation generates original solidity code with extra added code to check annotations at runtime.
+  \item Approach uses a Solidity grammar that can be updated easily for future updates.
+  \item Output of validation phase can be used for other verification tools (result is a parse tree).
+  \item Annotations can be defined as invariants and pre or post conditions for functions.
+  \item Annotations use JML like syntax.
+  \item Tool can be used both during development (as extra test cases) or on the actual live blockchain (this probably costs a lot of extra gas = ether).
+\end{itemize}
 
 \section{Annotation Language}
 The first step towards implementing the tool is to define an annotation syntax, and formally write this down using a grammar.
@@ -146,8 +157,29 @@ The validation phase will consist of two programs that walk the complete parse t
 
 \section{Generation}
 \begin{itemize}
-    \item TODO
+    \item Explain generation of functions for annotations. Each annotation will be transformed to a function, the function takes in arguments that are also generated automatically.
+    \item Explain how functions are calling the code for checking annotations. Original Function will be transformed to a private function and renamed to 'functionName"+ \_body. New function calls this function with the extra annotations.
+    \item Implementation of generation is using a TokenStreamRewriter (with whitespace) and an abstract parse tree (only tokens that are in grammar). Tokens in both structures know the position, this way the original solidity code can be printed and extra code can be added through traversing the parse tree.
 \end{itemize}
 
+\section{Case study}
+\begin{itemize}
+  \item Take contract that has vulnerability and add annotations
+  \item Show parts of generated code that will throw an event.
+  \item Show difference in gas usage?
+  \item Show how forall annotations are handled (example contract of minimal token).
+\end{itemize}
+
+\section{Future work}
+\begin{itemize}
+  \item The tool cannot handle contract inheritance.
+  \item The tool does not have a mechanism for exposing the parse tree for other programs after validation.
+\end{itemize}
+
+\section{Related Work}
+\begin{itemize}
+  \item ContractLarva: runtime monitoring based on defined states and transitions.
+  \item 
+\end{itemize}
 
 \end{document}
