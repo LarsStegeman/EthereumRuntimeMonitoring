@@ -104,7 +104,7 @@ public class TypeChecker extends SolidityAnnotatedBaseVisitor<SolidityType>{
         SolidityVariable var = vi.getIdentifier(current.getText(), functionReference);
         if(isOld){
             annotationInformation.addVariable(var.getOldSolidityVariable());
-        }else{
+        }else if(vi.getIdentifier(current.getText(), null) == null){
             annotationInformation.addVariable(var);
         }
         isOld = false;
@@ -166,7 +166,7 @@ public class TypeChecker extends SolidityAnnotatedBaseVisitor<SolidityType>{
         if(var != null){
             if(isOld){
                 annotationInformation.addVariable(var.getOldSolidityVariable());
-            }else{
+            }else if(vi.getIdentifier(ctx.getText(), null) == null){
                 annotationInformation.addVariable(var);
             }
             isOld = false;

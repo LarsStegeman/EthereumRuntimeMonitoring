@@ -131,7 +131,14 @@ public class SolidityPrinter extends SolidityAnnotatedBaseVisitor<String>{
         String addBeforeBody = new String("");
         String addAfterBody = new String("");
         for(AnnotationInformation current: allAnnotations){
-            String temp =  "    " + current.getName() + "();\n";
+            String annotationParameters = new String();
+            for(SolidityVariable var: current.getVariables()){
+                annotationParameters +=  ", "  + var.name; 
+            }
+            if(annotationParameters.length() > 1){
+                annotationParameters = annotationParameters.substring(2);
+            }
+            String temp =  "    " + current.getName() + "("+ annotationParameters+");\n";
             if(current.getType().equals("inv")){
                 addBeforeBody += temp;
                 addAfterBody += temp;
