@@ -23,6 +23,11 @@ public class AnnotationInformation{
     }
 
     public void addVariable(SolidityVariable var){
+        for(SolidityVariable x: variables){
+            if(x.name.equals(var.name)){
+                return;
+            }
+        }
         variables.add(var);
     }
 
