@@ -14,6 +14,7 @@ import generated.SolidityAnnotatedParser.AnnotationExpressionContext;
 import generated.SolidityAnnotatedParser.FunctionDefinitionContext;
 import generated.SolidityAnnotatedParser.ParameterContext;
 import generated.SolidityAnnotatedParser.PrimaryAnnotationExpressionContext;
+import validation.SolidityType;
 import validation.SolidityVariable;
 
 public class SolidityPrinter extends SolidityAnnotatedBaseVisitor<String>{
@@ -128,6 +129,7 @@ public class SolidityPrinter extends SolidityAnnotatedBaseVisitor<String>{
 
         //Store \old parameters and pass on function arguments
         List<AnnotationInformation> allAnnotations = getAllAnnotations(functionNameOriginal);
+        String storeOldVariables = new String("");
         String addBeforeBody = new String("");
         String addAfterBody = new String("");
         for(AnnotationInformation current: allAnnotations){
@@ -138,7 +140,7 @@ public class SolidityPrinter extends SolidityAnnotatedBaseVisitor<String>{
             if(annotationParameters.length() > 1){
                 annotationParameters = annotationParameters.substring(2);
             }
-            String temp =  "    " + current.getName() + "("+ annotationParameters+");\n";
+            String temp =  "        " + current.getName() + "("+ annotationParameters+");\n";
             if(current.getType().equals("inv")){
                 addBeforeBody += temp;
                 addAfterBody += temp;
@@ -147,15 +149,28 @@ public class SolidityPrinter extends SolidityAnnotatedBaseVisitor<String>{
             }else{
                 addAfterBody += temp;
             }
+
+            // Copy all old variables
+            for(SolidityVariable var: current.getVariables()){
+                if(var.name.endsWith("_old")){
+                    if(var.type == SolidityType.ARRAY || var.type == SolidityType.STRUCT){
+                        storeOldVariables += "\n        " + var.getTypeString() + " memory " + var.name + " = " + var.name.substring(0, var.name.length()-4) + ";";
+                    }else{
+                        storeOldVariables += "\n        " + var.getTypeString() + " " + var.name + " = " + var.name.substring(0, var.name.length()-4) + ";";
+                    }
+                }
+            }
         }
 
         if(hasReturnParameters){
+            newFunction+= storeOldVariables;
             newFunction+= addBeforeBody;
             newFunction+= "\n        " + functionReturn  + " = "+ functionNameOriginal+ "_body("+ functionArguments + ");\n";
             newFunction+= addAfterBody;
             newFunction+= "    return result;\n";
             newFunction+= "    }\n    ";    
         }else{
+            newFunction+= storeOldVariables;
             newFunction+= addBeforeBody;
             newFunction+= "\n        " + functionNameOriginal+ "_body("+ functionArguments + ");\n";
             newFunction+= addAfterBody;
