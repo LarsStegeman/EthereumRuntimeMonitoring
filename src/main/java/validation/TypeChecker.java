@@ -102,6 +102,10 @@ public class TypeChecker extends SolidityAnnotatedBaseVisitor<SolidityType>{
             current = current.primaryAnnotationExpression();
         }
         SolidityVariable var = vi.getIdentifier(current.getText(), functionReference);
+        if(var == null){
+            addError(ctx, "Identifier %s in annotation not defined as variable", ctx.getText());
+            return  SolidityType.UNDEFINED;
+        }
         if(isOld){
             annotationInformation.addVariable(var.getOldSolidityVariable());
         }else if(vi.getIdentifier(current.getText(), null) == null){
