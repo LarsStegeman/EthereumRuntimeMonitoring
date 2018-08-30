@@ -61,7 +61,7 @@ public class SolidityPrinter extends SolidityAnnotatedBaseVisitor<String>{
             if(ctx.getStart().getText().equals("!")){
                 result = "! " + visit(ctx.annotationExpression(0));
             }else{
-                result =  "(" + visit(ctx.primaryAnnotationExpression()) + " )";
+                result =  "(" + visit(ctx.annotationExpression(0)) + " )";
             }   
         }else{
             // First visit children and get their type
