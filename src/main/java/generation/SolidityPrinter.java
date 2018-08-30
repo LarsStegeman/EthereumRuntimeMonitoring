@@ -153,8 +153,10 @@ public class SolidityPrinter extends SolidityAnnotatedBaseVisitor<String>{
             // Copy all old variables
             for(SolidityVariable var: current.getVariables()){
                 if(var.name.endsWith("_old")){
-                    if(var.type == SolidityType.ARRAY || var.type == SolidityType.STRUCT){
+                    if(var.type == SolidityType.STRUCT){
                         storeOldVariables += "\n        " + var.getTypeString() + " memory " + var.name + " = " + var.name.substring(0, var.name.length()-4) + ";";
+                    }else if(var.type == SolidityType.ARRAY){
+                        storeOldVariables += "\n        " + var.getTypeString() + "[] memory " + var.name + " = " + var.name.substring(0, var.name.length()-4) + ";";
                     }else{
                         storeOldVariables += "\n        " + var.getTypeString() + " " + var.name + " = " + var.name.substring(0, var.name.length()-4) + ";";
                     }
