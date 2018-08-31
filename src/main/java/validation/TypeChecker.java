@@ -198,6 +198,7 @@ public class TypeChecker extends SolidityAnnotatedBaseVisitor<SolidityType>{
         scopeIdentifier = ctx.identifier(0).getText();
         scopeType = (var.type == SolidityType.ARRAY) ? SolidityType.INTEGER : var.from[0];
         visit(ctx.annotationExpression(0));
+        scopeIdentifier = null;
     }
 
     public void addError(ParserRuleContext node, String message, Object... args){
