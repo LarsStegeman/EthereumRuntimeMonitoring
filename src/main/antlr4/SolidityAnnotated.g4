@@ -28,7 +28,7 @@ annotationExpression
   | annotationExpression integerOpBoolean annotationExpression
   | annotationExpression integerOpInteger annotationExpression
   | '!'annotationExpression
-  | ('\\forall' | '\\exists') '(' identifier elementaryTypeName ':' annotationExpression? ':' annotationExpression')'
+  | ('\\forall' | '\\exists') '(' identifier 'in' identifier ':' annotationExpression')'
   | primaryAnnotationExpression;
 
 primaryAnnotationExpression

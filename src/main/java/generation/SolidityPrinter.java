@@ -3,6 +3,7 @@ package generation;
 import java.util.ArrayList;
 import java.util.List;
 
+
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.TokenStreamRewriter;
@@ -22,6 +23,11 @@ public class SolidityPrinter extends SolidityAnnotatedBaseVisitor<String>{
     private TokenStreamRewriter rewriter;
     private List<AnnotationInformation> info;
 
+    //Current annotation state variables
+    AnnotationInformation annotationInfo;
+    String annotationString;
+    int expressionNumber;
+
 
     public SolidityPrinter(TokenStreamRewriter rewriter, List<AnnotationInformation> info){
         this.rewriter = rewriter;
@@ -30,13 +36,17 @@ public class SolidityPrinter extends SolidityAnnotatedBaseVisitor<String>{
 
     @Override
     public String visitAnnotationDefinition(AnnotationDefinitionContext ctx){
+        //Clear state
+        annotationInfo = findAnnotationInfo(ctx);
+        annotationString = new String();
+        expressionNumber = 0;
         //For each annotation create a function
         String modifier = "\n   ";
 
-        AnnotationInformation current = findAnnotationInfo(ctx);
+
         String annotationParameters = new String();
-        if(!current.getType().equals("inv")){
-            for(SolidityVariable var: current.getVariables()){
+        if(!annotationInfo.getType().equals("inv")){
+            for(SolidityVariable var: annotationInfo.getArgumentVariables()){
                 annotationParameters +=  ", " + var.getTypeString() + " " + var.name; 
             }
             annotationParameters = annotationParameters.substring(2);
@@ -44,7 +54,8 @@ public class SolidityPrinter extends SolidityAnnotatedBaseVisitor<String>{
         String expression = visit(ctx.annotationExpression());
         expression = formatExpression(expression);
 
-        modifier +="function " + current.getName() + "(" + annotationParameters + ") private{ \n";
+        modifier +="function " + annotationInfo.getName() + "(" + annotationParameters + ") private{ \n";
+        modifier += annotationString;
         modifier += "   " + expression + "\n";
         modifier += "    }\n";
         rewriter.insertAfter(ctx.stop, modifier);
@@ -56,13 +67,16 @@ public class SolidityPrinter extends SolidityAnnotatedBaseVisitor<String>{
         String result = new String();
         if(ctx.primaryAnnotationExpression() != null){
             result = visit(ctx.primaryAnnotationExpression());
+        }else if(ctx.identifier().size() == 2){
+            //Forall/exist expression
+            result = printAnnotationLoop(ctx);
         }else if(ctx.annotationExpression().size() == 1){
             // case of ! 'expr'
             if(ctx.getStart().getText().equals("!")){
                 result = "! " + visit(ctx.annotationExpression(0));
             }else{
                 result =  "(" + visit(ctx.annotationExpression(0)) + " )";
-            }   
+            }
         }else{
             // First visit children and get their type
             String exp1 = this.visit(ctx.annotationExpression(0));
@@ -134,7 +148,7 @@ public class SolidityPrinter extends SolidityAnnotatedBaseVisitor<String>{
         String addAfterBody = new String("");
         for(AnnotationInformation current: allAnnotations){
             String annotationParameters = new String();
-            for(SolidityVariable var: current.getVariables()){
+            for(SolidityVariable var: current.getArgumentVariables()){
                 annotationParameters +=  ", "  + var.name; 
             }
             if(annotationParameters.length() > 1){
@@ -151,7 +165,7 @@ public class SolidityPrinter extends SolidityAnnotatedBaseVisitor<String>{
             }
 
             // Copy all old variables
-            for(SolidityVariable var: current.getVariables()){
+            for(SolidityVariable var: current.getArgumentVariables()){
                 if(var.name.endsWith("_old")){
                     if(var.type == SolidityType.STRUCT){
                         storeOldVariables += "\n        " + var.getTypeString() + " memory " + var.name + " = " + var.name.substring(0, var.name.length()-4) + ";";
@@ -185,6 +199,28 @@ public class SolidityPrinter extends SolidityAnnotatedBaseVisitor<String>{
         rewriter.replace(ctx.identifier().start, functionNameOriginal + "_body");
         rewriter.replace(ctx.modifierList().start,ctx.modifierList().stop, "private");
         return null;
+    }
+
+    public String printAnnotationLoop(AnnotationExpressionContext ctx){
+        String loop = new String();
+        String expressionBoolean = "expression" + expressionNumber;
+        expressionNumber++;
+
+        //Determine if //exists or //forall
+        if(ctx.getText().startsWith("\\forall")){
+            loop+= "        bool " + expressionBoolean + "= true;\n";
+            loop+= "        for(uint256 i; i>0 && i<" + ctx.identifier(1).getText() + ".length &&" + expressionBoolean+";i++){\n";
+            loop+= "            " + expressionBoolean + "=" + visit(ctx.annotationExpression(0)) + ";\n"; 
+            loop+= "    }\n";
+        }else{
+            loop+= "        bool " + expressionBoolean + "= false;\n";
+            loop+= "        for(uint256 i; i>0 && i<" + ctx.identifier(1).getText() + ".length && !" + expressionBoolean +";i++){\n";
+            loop+= "            " + expressionBoolean + "= ( " + visit(ctx.annotationExpression(0)) + ");\n"; 
+            loop+= "    }\n";
+        }
+        //Add the extra code to the annotation
+        annotationString += loop;
+        return expressionBoolean;
     }
 
     //The format for expression evaluation, so it can be easily changed for an event.

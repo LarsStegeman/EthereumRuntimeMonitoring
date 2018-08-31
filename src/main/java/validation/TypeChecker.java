@@ -18,6 +18,10 @@ public class TypeChecker extends SolidityAnnotatedBaseVisitor<SolidityType>{
     private AnnotationInformation annotationInformation;
     private boolean isOld = false;
 
+    //Scope identifier and type for forall and exists expressions
+    private String scopeIdentifier;
+    private SolidityType scopeType;
+
 
     public TypeChecker(ValidationInformation info, String functionReference, ErrorListener listener, AnnotationInformation annotationInformation){
         this.vi = info;
@@ -32,9 +36,10 @@ public class TypeChecker extends SolidityAnnotatedBaseVisitor<SolidityType>{
         //Base Case -- get the type;
         if(ctx.primaryAnnotationExpression() != null){
             type =this.visit(ctx.primaryAnnotationExpression());
-        }else if(ctx.identifier() != null){
-            // case of old keyword
-            type =this.visit(ctx.identifier());
+        }else if(ctx.identifier().size() == 2){
+            // case of forall or exists
+            parseForallExistsExpression(ctx);
+            type = SolidityType.BOOL;
         }else if(ctx.annotationExpression().size() == 1){
             SolidityType type1 =  this.visit(ctx.annotationExpression(0));
             // case of ! 'expr'
@@ -107,9 +112,9 @@ public class TypeChecker extends SolidityAnnotatedBaseVisitor<SolidityType>{
             return  SolidityType.UNDEFINED;
         }
         if(isOld){
-            annotationInformation.addVariable(var.getOldSolidityVariable());
-        }else if(vi.getIdentifier(current.getText(), null) == null){
-            annotationInformation.addVariable(var);
+            annotationInformation.addVariable(var.getOldSolidityVariable(), true);
+        }else{
+            annotationInformation.addVariable(var, vi.getIdentifier(current.getText(), null) == null);
         }
         isOld = false;
         
@@ -169,16 +174,30 @@ public class TypeChecker extends SolidityAnnotatedBaseVisitor<SolidityType>{
         SolidityVariable var = vi.getIdentifier(ctx.getText(), functionReference);
         if(var != null){
             if(isOld){
-                annotationInformation.addVariable(var.getOldSolidityVariable());
-            }else if(vi.getIdentifier(ctx.getText(), null) == null){
-                annotationInformation.addVariable(var);
+                annotationInformation.addVariable(var.getOldSolidityVariable(), true);
+            }else{
+                annotationInformation.addVariable(var, vi.getIdentifier(ctx.getText(), null) == null);
             }
             isOld = false;
             return var.type;
+        }else if(ctx.getText().equals(scopeIdentifier)){
+            return scopeType;
         }else{
             addError(ctx, "Identifier %s in annotation not defined as variable", ctx.getText());
             return  SolidityType.UNDEFINED;
         }
+    }
+
+    public void parseForallExistsExpression(AnnotationExpressionContext ctx){
+        //Second identifier should be a solidityVariable of type ARRAY or MAPPING
+        SolidityVariable var = vi.getIdentifier(ctx.identifier(1).getText(), functionReference);
+        if(var == null || var.type != SolidityType.ARRAY || var.type != SolidityType.MAPPING){
+            //TODO report error
+        }
+        //Parse rest of the expression
+        scopeIdentifier = ctx.identifier(0).getText();
+        scopeType = (var.type == SolidityType.ARRAY) ? SolidityType.INTEGER : var.from[0];
+        visit(ctx.annotationExpression(0));
     }
 
     public void addError(ParserRuleContext node, String message, Object... args){
