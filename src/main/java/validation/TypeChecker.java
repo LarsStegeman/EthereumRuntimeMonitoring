@@ -86,11 +86,11 @@ public class TypeChecker extends SolidityAnnotatedBaseVisitor<SolidityType>{
     public SolidityType visitPrimaryAnnotationExpression(PrimaryAnnotationExpressionContext ctx){
         SolidityType result = SolidityType.UNDEFINED;
         // Base case a primary expression
-        if(ctx.primaryExpression() != null && ctx.primaryAnnotationExpression() == null){
+        if(ctx.primaryExpression() != null && ctx.primaryAnnotationExpression().size() == 0){
             result = visit(ctx.primaryExpression());
-        }else if(ctx.primaryAnnotationExpression() != null && ctx.primaryExpression() == null && ctx.identifier() == null){
+        }else if(ctx.primaryAnnotationExpression().size() == 1 && ctx.identifier() == null){
             isOld = true;
-            result = visit(ctx.primaryAnnotationExpression());
+            result = visit(ctx.primaryAnnotationExpression(0));
         }else{
             //Case of mapping/array/struct
             result = this.parseComplexStructure(ctx);
@@ -102,9 +102,9 @@ public class TypeChecker extends SolidityAnnotatedBaseVisitor<SolidityType>{
     public SolidityType parseComplexStructure(PrimaryAnnotationExpressionContext ctx){
         //First we have to traverse the tree to get the base variable.
         SolidityType result = SolidityType.UNDEFINED;
-        PrimaryAnnotationExpressionContext current = ctx.primaryAnnotationExpression();
-        while(current.primaryAnnotationExpression() != null){
-            current = current.primaryAnnotationExpression();
+        PrimaryAnnotationExpressionContext current = ctx.primaryAnnotationExpression(0);
+        while(current.primaryAnnotationExpression().size() != 0){
+            current = current.primaryAnnotationExpression(0);
         }
         SolidityVariable var = vi.getIdentifier(current.getText(), functionReference);
         if(var == null){
@@ -123,7 +123,7 @@ public class TypeChecker extends SolidityAnnotatedBaseVisitor<SolidityType>{
         if(var.type == SolidityType.MAPPING){
             for(int i = 0; i<var.from.length; i++){
                 current = (PrimaryAnnotationExpressionContext) current.getParent();
-                SolidityType element = visit(current.primaryExpression());
+                SolidityType element = visit(current.primaryAnnotationExpression(1));
                 if(element != var.from[i]){
                     // TODO Report error
                 }
@@ -132,7 +132,7 @@ public class TypeChecker extends SolidityAnnotatedBaseVisitor<SolidityType>{
         }else if(var.type == SolidityType.ARRAY){
             for(int i = 0; i<var.depth; i++){
                 current = (PrimaryAnnotationExpressionContext) current.getParent();
-                SolidityType element = visit(current.primaryExpression());
+                SolidityType element = visit(current.primaryAnnotationExpression(1));
                 if(element != SolidityType.INTEGER){
                     // TODO Report error
                 }

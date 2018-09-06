@@ -110,18 +110,18 @@ public class SolidityPrinter extends SolidityAnnotatedBaseVisitor<String>{
 
     @Override
     public String visitPrimaryAnnotationExpression(PrimaryAnnotationExpressionContext ctx){
-        if(ctx.primaryAnnotationExpression() != null && ctx.primaryExpression() == null && ctx.identifier() == null){
-            PrimaryAnnotationExpressionContext current = ctx.primaryAnnotationExpression();
-            while(current.primaryAnnotationExpression() != null){
-                current = current.primaryAnnotationExpression();
+        if(ctx.primaryAnnotationExpression().size() == 1 && ctx.primaryExpression() == null && ctx.identifier() == null){
+            PrimaryAnnotationExpressionContext current = ctx.primaryAnnotationExpression(0);
+            while(current.primaryAnnotationExpression(0) != null){
+                current = current.primaryAnnotationExpression(0);
             }
             //Get the base definition and add _old for the identifier, then add the rest of the expression.
-            return current.getText() + "_old" + visit(ctx.primaryAnnotationExpression()).substring(current.getText().length());
+            return current.getText() + "_old" + visit(ctx.primaryAnnotationExpression(0)).substring(current.getText().length());
         }else if(ctx.getText().contains("[")){
             for(SolidityVariable var: annotationInfo.getVariables()){
-                if(var.name.equals(ctx.primaryAnnotationExpression().getText())){
+                if(var.name.equals(ctx.primaryAnnotationExpression(0).getText())){
                     if(var.type == SolidityType.MAPPING){
-                        return var.name + ".get("+ ctx.primaryExpression().getText() + ")";
+                        return var.name + ".get("+ visit(ctx.primaryAnnotationExpression(1)) + ")";
                     }
                 }
             }

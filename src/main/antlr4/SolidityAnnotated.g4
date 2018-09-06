@@ -34,7 +34,7 @@ annotationExpression
 primaryAnnotationExpression
   : primaryExpression 
   | primaryAnnotationExpression '.' identifier
-  | primaryAnnotationExpression '[' primaryExpression ']'
+  | primaryAnnotationExpression '[' primaryAnnotationExpression ']'
   | '\\old' '(' primaryAnnotationExpression ')';
 
 //Annotation Tokens
