@@ -14,6 +14,7 @@ import generated.SolidityAnnotatedParser.AnnotationExpressionContext;
 import generated.SolidityAnnotatedParser.ContractDefinitionContext;
 import generated.SolidityAnnotatedParser.ContractPartContext;
 import generated.SolidityAnnotatedParser.ExpressionContext;
+import generated.SolidityAnnotatedParser.ExpressionStatementContext;
 import generated.SolidityAnnotatedParser.FunctionDefinitionContext;
 import generated.SolidityAnnotatedParser.IdentifierContext;
 import generated.SolidityAnnotatedParser.ParameterContext;
@@ -370,7 +371,11 @@ public class SolidityPrinter extends SolidityAnnotatedBaseVisitor<String>{
                 //Then the parent of that is what determines if it is LHS or RHS
                 ParserRuleContext parent = (ParserRuleContext) ctx.getParent().getParent().getParent().getParent();
                 //Determine if it has to be replaced with get or insert
-                if(parent instanceof ExpressionContext && parent.getText().contains("=") && ((ExpressionContext) parent).expression(0) == mappingAccess){
+                if(parent instanceof ExpressionContext && parent.getText().contains("+=") && ((ExpressionContext) parent).expression(0) == mappingAccess && parent.getParent() instanceof ExpressionStatementContext){
+                    rewriter.replace(parent.start, parent.stop, map.name + ".insert(" + mappingAccess.expression(1).getText() + ","+ map.name + ".get(" + mappingAccess.expression(1).getText() + ")+" + ((ExpressionContext) parent).expression(1).getText() + ")");
+                }else if(parent instanceof ExpressionContext && parent.getText().contains("-=") && ((ExpressionContext) parent).expression(0) == mappingAccess && parent.getParent() instanceof ExpressionStatementContext){
+                    rewriter.replace(parent.start, parent.stop, map.name + ".insert(" + mappingAccess.expression(1).getText() + ","+ map.name + ".get(" + mappingAccess.expression(1).getText() + ")-" + ((ExpressionContext) parent).expression(1).getText() + ")");
+                }else if(parent instanceof ExpressionContext && parent.getText().contains("=") && ((ExpressionContext) parent).expression(0) == mappingAccess && parent.getParent() instanceof ExpressionStatementContext){
                     rewriter.replace(parent.start, parent.stop, map.name + ".insert(" + mappingAccess.expression(1).getText() + "," + ((ExpressionContext) parent).expression(1).getText() + ")");
                 }else{
                     rewriter.replace(mappingAccess.start, mappingAccess.stop, map.name + ".get(" + mappingAccess.expression(1).getText() + ")");
