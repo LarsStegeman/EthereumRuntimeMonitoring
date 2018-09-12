@@ -18,4 +18,9 @@ contract DataStructures {
     // Type lookup should happen recursively through all structs and references
     
     //@ inv a.b.c == 5
+
+
+    //@ post a.b.c == \old(a.b.c)
+    function newFunction() public {}
+    
 }

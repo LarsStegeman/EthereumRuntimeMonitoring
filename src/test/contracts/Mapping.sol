@@ -19,4 +19,13 @@ contract Mapping {
         bool b1;
     }
     //@ inv mapToStruct[5].b1
+
+
+    //@ post a[_to] == a[_to]
+    function testOldMapping(address _to, uint256 _value) public{
+
+    }
+
+
+    //@ inv \forall(x in a: a[x] > 0 )
 }

@@ -18,4 +18,14 @@ contract Array {
         bool b1;
     }
     //@ inv arrayOfStruct[5].b1
+
+    //@ post a[b] == \old(a[b])
+    function testOldArray() public{
+    }
+
+
+    //@ post \forall(i in a: a[i]>=0) && \exists(i in a: a[i]==index)
+    function testForallArray(uint256 index) public {
+
+    }
 }

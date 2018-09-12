@@ -24,4 +24,7 @@ contract BasicAnnotations {
 
 	mapping(address => uint256) map;
 
+
+	//@ inv msg.sender == msg.sender
+	function anotherFunction() pure public{}
 }

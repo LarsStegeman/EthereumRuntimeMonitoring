@@ -7,21 +7,25 @@ contract SimpleToken {
 	/* It is assigned in the constructor */
 	uint256 totalSupply;
 
+
 	/* Initializes contract with initial supply tokens to the creator of the contract */
 	function SimpleToken(uint256 initialSupply) public {
 		// Give the creator all initial tokens
 		balanceOf[msg.sender] = initialSupply;              
 		totalSupply = initialSupply;
 	}
-	bool public b;
-	address public a;
-	// This is normal top level comment
-	//@ pre a == a && c
-	//@ inv a > a && a < a
-	//
-	// this @ is a comment
-	/* I can use @ here */
+
 	/* Send coins */
+	/* @ensures 		
+			balanceOf[_to] == \old(balanceOf[_to]) + _value &&
+			balanceOf[msg.sender] == \old(balanceOf[msg.sender]) - _value &&
+			forall x : x != _to || x != msg.sender : balanceOf[x] == \old(balanceOf[x]) &&
+			_to != msg.sender
+			||
+			_to == msg.sender
+	*/
+	//@ pre _to != msg.sender
+	//@ post balanceOf[_to] == (\old(balanceOf[_to]) + _value) && balanceOf[msg.sender] == (\old(balanceOf[msg.sender]) - _value)
 	function transfer(address _to, uint256 _value) public {
 		// Check if the sender has enough
 		require(balanceOf[msg.sender] >= _value);
@@ -30,6 +34,6 @@ contract SimpleToken {
 		// Subtract from the sender
 		balanceOf[msg.sender] -= _value;    
 		// Add the same to the recipient		
-		balanceOf[_to] += _value;                           
+		balanceOf[_to] += _value; 
 	}
 }
