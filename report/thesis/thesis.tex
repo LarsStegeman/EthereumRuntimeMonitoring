@@ -52,8 +52,19 @@ Section explains basics of solidity in order to understand the rest of the paper
   \item Annotations use JML like syntax.
   \item Tool can be used both during development (as extra test cases) or on the actual live blockchain (this probably costs a lot of extra gas = ether).
 \end{itemize}
+\begin{center}
+  \includegraphics[width=\textwidth,height=\textheight,keepaspectratio]{resources/ToolOverview.png}
+\end{center}
+In the picture the complete overview of the tool can be seen. Within the dashed square the implemented parts are visible. The arrows indicate the flow of the contract code throughout the program. \\
+First contract code has to be annotated according to a specified grammar. Section \ref{sec:annotationlanguage} explains the grammar in more detail and gives some example annotations. The tool ANTLR is used to generate code for the lexer and parser. The result of this step is a parse tree which can be used for later stages. \\
+The next step is type checking the annotations. This uses the parse tree to examine the annotations and check if they are valid. The type checking is done bottom up and works in two phases. The first phase collects all the relevant variables. This includes state variables and function definitions (function name, arguments and return values). The next phase uses this information to do the actual type checking of the annotations. This is explained in more detail in Section \ref{sec:typechecker}. \\
+The result of the type checker phase are type-checked annotations. In practice these are parse tree objects in which the types correspond to the operators used and the identifiers that are used are also defined in the contract. This is used as input for the generation phase. The generation phase will operate on the information that is created during the type checker phase. For each annotation it will generate the code that is needed to check it during runtime. This happens in a single passage of the complete parse tree. Details on this phase can be found in Section \ref{sec:generation}. \\
+Using the annotation grammar all specifications can be expressed. But not all specifications can be translated to code that can be checked at runtime. This means that some annotations will not be translated to runtime monitored contract code. The output of the type checker phase can also be used for other static analysis tools. The benefit of using the tool to validate the annotations is that the result is a type checked parse tree that can be parsed and traversed in various ways to be useful for static verification methods. 
+
+
 
 \section{Annotation Language}
+\label{sec:annotationlanguage}
 The first step towards implementing the tool is to define an annotation syntax, and formally write this down using a grammar.
 
 \subsection{ANTLR}
@@ -142,7 +153,8 @@ There are two types of annotations they are defined by the token \texttt{Annotat
 Each annotation has an expression which has to be evaluated called \texttt{annotationExpression}. The expression parser rules are separated between \texttt{annotationExpression} and \texttt{primaryAnnotationExpression}. This is needed to keep the hierarchy in parsing and prevent using primary definitions with complex expressions. For example using the keyword '\textbackslash old' before parenthesis.\\
 The annotation expressions use a different parser rules than the expression rules that are used within the original Solidity grammar. The \texttt{annotationExpression} does not allow syntax like \texttt{expression + '++'} and to distinguish these a new parser rule was introduced for annotations only.
 
-\section{Validation}
+\section{Type Checker}
+\label{sec:typechecker}
 \subsection{Design}
 Annotations have to be validated on certain aspects for them to be correct and usable. These aspects have to be verified first for the annotations to be useful in the next generation phase. The parser ensures annotations are syntactically correct however there are more properties that have to be checked.
 In short the validation step within the program has to do the following things:
@@ -156,11 +168,15 @@ The validation phase will consist of two programs that walk the complete parse t
 
 
 \section{Generation}
+\label{sec:generation}
 \begin{itemize}
     \item Explain generation of functions for annotations. Each annotation will be transformed to a function, the function takes in arguments that are also generated automatically.
     \item Explain how functions are calling the code for checking annotations. Original Function will be transformed to a private function and renamed to 'functionName"+ \_body. New function calls this function with the extra annotations.
     \item Implementation of generation is using a TokenStreamRewriter (with whitespace) and an abstract parse tree (only tokens that are in grammar). Tokens in both structures know the position, this way the original solidity code can be printed and extra code can be added through traversing the parse tree.
 \end{itemize}
+
+\section{Tool Usage}
+
 
 \section{Case study}
 \begin{itemize}
