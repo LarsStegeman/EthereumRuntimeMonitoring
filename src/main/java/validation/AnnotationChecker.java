@@ -1,6 +1,5 @@
 package validation;
 
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,12 +10,8 @@ import generated.SolidityAnnotatedParser.AnnotationDefinitionContext;
 import generated.SolidityAnnotatedParser.ContractDefinitionContext;
 import generation.AnnotationInformation;
 import utils.ErrorListener;
+import utils.Parameters;
 
-
-/*  This class checks the following properties
-        - Validates if the used identifiers are indeed variables
-        - TODO
-*/
 public class AnnotationChecker extends SolidityAnnotatedBaseVisitor<Void>{
     private ValidationInformation info;
     private ErrorListener listener;
@@ -24,7 +19,7 @@ public class AnnotationChecker extends SolidityAnnotatedBaseVisitor<Void>{
     private int annotationNumber;
 
     public AnnotationChecker(ValidationInformation info, ErrorListener listener){
-        System.out.println("AnnotationChecker created");
+        if(Parameters.DEBUG) System.out.println("AnnotationChecker created");
         this.info = info;
         this.listener = listener;
         this.annotationsInformation = new ArrayList<>();
@@ -50,8 +45,7 @@ public class AnnotationChecker extends SolidityAnnotatedBaseVisitor<Void>{
 
     @Override
     public Void visitAnnotationDefinition(AnnotationDefinitionContext ctx){
-        System.out.println("Annotation found");
-        System.out.println(ctx.getText());
+        if(Parameters.DEBUG) System.out.println("Annotation found: " + ctx.getText());
         //Create TypeChecker with ValidationInformation object
         //Each annotation will report its own errors and continue.
 

@@ -11,6 +11,7 @@ import generated.SolidityAnnotatedParser.StateVariableDeclarationContext;
 import generated.SolidityAnnotatedParser.StructDefinitionContext;
 import generated.SolidityAnnotatedParser.TypeNameContext;
 import generated.SolidityAnnotatedParser.VariableDeclarationContext;
+import utils.Parameters;
 
 
 
@@ -20,13 +21,13 @@ public class IdentifierCollector extends SolidityAnnotatedBaseVisitor<Void>{
 
     public IdentifierCollector(ValidationInformation info){
         this.info = info;
-        System.out.println("IdentifierCollector created");
+        if(Parameters.DEBUG) System.out.println("IdentifierCollector created");
         addGlobalIdentifiers();
     }
 
     @Override
     public Void visitStateVariableDeclaration(StateVariableDeclarationContext ctx){
-        System.out.println("VariableDecl: " + ctx.getText());
+        if(Parameters.DEBUG) System.out.println("VariableDecl: " + ctx.getText());
         if(ctx.typeName().mapping() != null){
             // Mapping case
             parseMapping(ctx.typeName().mapping(), ctx.identifier().getText());
@@ -42,7 +43,7 @@ public class IdentifierCollector extends SolidityAnnotatedBaseVisitor<Void>{
 
     @Override
     public Void visitFunctionDefinition(FunctionDefinitionContext ctx){
-        System.out.println("FunctionDef: " + ctx.getText());
+        if(Parameters.DEBUG) System.out.println("FunctionDef: " + ctx.getText());
         //Skip fallback function
         if(ctx.identifier() != null){
             ArrayList<SolidityVariable> args = new ArrayList<SolidityVariable>();
@@ -58,6 +59,7 @@ public class IdentifierCollector extends SolidityAnnotatedBaseVisitor<Void>{
 
     @Override
     public Void visitStructDefinition(StructDefinitionContext ctx){
+        if(Parameters.DEBUG) System.out.println("StructDef: " + ctx.getText());
         ArrayList<SolidityVariable> elements = new ArrayList<SolidityVariable>();
         for(VariableDeclarationContext i : ctx.variableDeclaration()){
             elements.add(new SolidityVariable(i.identifier().getText(),getType(i.typeName().getText()), i.typeName().getText()));

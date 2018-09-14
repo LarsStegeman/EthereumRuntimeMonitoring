@@ -125,7 +125,7 @@ public class TypeChecker extends SolidityAnnotatedBaseVisitor<SolidityType>{
                 current = (PrimaryAnnotationExpressionContext) current.getParent();
                 SolidityType element = visit(current.primaryAnnotationExpression(1));
                 if(element != var.from[i]){
-                    // TODO Report error
+                    addError(ctx, "Expected type to be %s but was %s", var.from[i], element);
                 }
             }
             result = var.to;
@@ -134,7 +134,7 @@ public class TypeChecker extends SolidityAnnotatedBaseVisitor<SolidityType>{
                 current = (PrimaryAnnotationExpressionContext) current.getParent();
                 SolidityType element = visit(current.primaryAnnotationExpression(1));
                 if(element != SolidityType.INTEGER){
-                    // TODO Report error
+                    addError(ctx, "Expected type to be INTEGER but was %s", element);
                 }
 
             }
@@ -153,7 +153,9 @@ public class TypeChecker extends SolidityAnnotatedBaseVisitor<SolidityType>{
                         break;
                     }
                 }
-                //TODO report error when identifier not found
+                if(result == SolidityType.UNDEFINED){
+                    addError(ctx, "Identifier %s not an element of struct %s", current.identifier().getText(), struct.name);
+                }
             }
         }
         return result;
@@ -191,8 +193,8 @@ public class TypeChecker extends SolidityAnnotatedBaseVisitor<SolidityType>{
     public void parseForallExistsExpression(AnnotationExpressionContext ctx){
         //Second identifier should be a solidityVariable of type ARRAY or MAPPING
         SolidityVariable var = vi.getIdentifier(ctx.identifier(1).getText(), functionReference);
-        if(var == null || var.type != SolidityType.ARRAY || var.type != SolidityType.MAPPING){
-            //TODO report error
+        if(var == null || (var.type != SolidityType.ARRAY && var.type != SolidityType.MAPPING)){
+            addError(ctx, "Identifier %s not found or not of type MAPPING or ARRAY", ctx.identifier(1).getText());
         }
         //Parse rest of the expression
         scopeIdentifier = ctx.identifier(0).getText();

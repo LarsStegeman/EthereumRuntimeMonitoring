@@ -13,16 +13,18 @@ import org.antlr.v4.runtime.tree.ParseTree;
 
 import generated.SolidityAnnotatedLexer;
 import generated.SolidityAnnotatedParser;
+import generated.SolidityAnnotatedParser.SourceUnitContext;
 import generation.AnnotationInformation;
 import generation.SolidityPrinter;
 import utils.ErrorListener;
+import utils.Parameters;
 import validation.AnnotationChecker;
 import validation.IdentifierCollector;
 import validation.ValidationInformation;
 
 public class SolidityAnnotation{
 	private File file;
-	TokenStream tokens;
+	private TokenStream tokens;
 
     public static void main(String[] args){
 		if(args.length != 1){
@@ -50,14 +52,18 @@ public class SolidityAnnotation{
 		ParseTree tree = parseProgram(listener);
 		if(listener.hasErrors() || tree == null){
 			listener.printErrors();
-			return;
+			if(Parameters.STOPONERROR){
+				return;
+			}
 		}
 
 		// Validation
 		List<AnnotationInformation> info = validateProgram(tree, listener);
 		if(listener.hasErrors()){
 			listener.printErrors();
-			//return;
+			if(Parameters.STOPONERROR){
+				return;
+			}
 		}
 
 		// Generation
@@ -87,6 +93,7 @@ public class SolidityAnnotation{
 	}
 
 	public List<AnnotationInformation> validateProgram(ParseTree tree, ErrorListener listener){
+		System.out.println("--- Type checking contract: "+ ((SourceUnitContext) tree).contractDefinition(0).identifier().getText());
 		ValidationInformation infoObj = new ValidationInformation();
 		IdentifierCollector col = new IdentifierCollector(infoObj);
 		col.visit(tree);
@@ -95,7 +102,8 @@ public class SolidityAnnotation{
 		return checker.getAnnotationsInformation();
 	}
 
-	public String generateProgram(ParseTree tree, List<AnnotationInformation> info){	
+	public String generateProgram(ParseTree tree, List<AnnotationInformation> info){
+		System.out.println("--- Generating solidity code for contract: "+ ((SourceUnitContext) tree).contractDefinition(0).identifier().getText());	
 		//Generation
 		TokenStreamRewriter rewriter = new TokenStreamRewriter(tokens);
 		SolidityPrinter printer = new SolidityPrinter(rewriter, info);
@@ -115,6 +123,7 @@ public class SolidityAnnotation{
 			PrintWriter writer = new PrintWriter(target);
 			writer.write(program);
 			writer.close();
+			System.out.println("--- Generated contract written to: "+ target.getAbsolutePath());
 		}catch(FileNotFoundException ex){
 			System.out.println(ex.toString());
 		}
