@@ -59,26 +59,23 @@ In the picture the complete overview of the tool can be seen. Within the dashed 
 First contract code has to be annotated according to a specified grammar. Section \ref{sec:annotationlanguage} explains the grammar in more detail and gives some example annotations. The tool ANTLR is used to generate code for the lexer and parser. The result of this step is a parse tree which can be used for later stages. \\
 The next step is type checking the annotations. This uses the parse tree to examine the annotations and check if they are valid. The type checking is done bottom up and works in two phases. The first phase collects all the relevant variables. This includes state variables and function definitions (function name, arguments and return values). The next phase uses this information to do the actual type checking of the annotations. This is explained in more detail in Section \ref{sec:typechecker}. \\
 The result of the type checker phase are type-checked annotations. In practice these are parse tree objects in which the types correspond to the operators used and the identifiers that are used are also defined in the contract. This is used as input for the generation phase. The generation phase will operate on the information that is created during the type checker phase. For each annotation it will generate the code that is needed to check it during runtime. This happens in a single passage of the complete parse tree. Details on this phase can be found in Section \ref{sec:generation}. \\
-Using the annotation grammar all specifications can be expressed. But not all specifications can be translated to code that can be checked at runtime. This means that some annotations will not be translated to runtime monitored contract code. The output of the type checker phase can also be used for other static analysis tools. The benefit of using the tool to validate the annotations is that the result is a type checked parse tree that can be parsed and traversed in various ways to be useful for static verification methods. 
-
-
+Using the annotation grammar all specifications can be expressed. But not all specifications can be translated to code that can be checked at runtime. This means that some annotations will not be translated to runtime monitored contract code. This is the case because of limitations within the Solidity language. For example the mapping type is not iterable and the keys are not known. This means that mappings have to be replaced with other constructions. In the current state of the tool only basic mappings can be replaced with iterable constructions. \\
+The output of the type checker phase can also be used for other static analysis tools. The benefit of using the tool to validate the annotations is that the result is a type checked parse tree that can be parsed and traversed in various ways to be useful for static verification methods. 
 
 \section{Annotation Language}
 \label{sec:annotationlanguage}
-The first step towards implementing the tool is to define an annotation syntax, and formally write this down using a grammar.
+The first step towards implementing the tool is to define an annotation syntax, and formally write this down using a grammar. The parser generator that is used is called ANTLR. Using the grammar definition the lexer and parser will be automatically generated. The output of this phase is a parse tree that can be used in later stages of the tool.
 
-\subsection{ANTLR}
 \subsection{Grammar definition}
-There already exists a grammar for the complete Solidity language. This grammar is written down using the language that is used by ANTLR tool. ANTLR is a parser generator which helps automate the building of a compiler. ANTLR has the capabilities to extend certain grammars. This is done by inheritance over the original grammar. This principle is explained in detail here (find ref). We will use this principle to extend the grammar of Solidity to recognize the special annotations that will later be used in the tool. \\
+There already exists a grammar for the complete Solidity language. This grammar is written down using the language that is used by ANTLR tool. ANTLR has the capabilities to extend certain grammars. This is done by inheritance over the original grammar. This principle is explained in detail here (find ref). We will use this principle to extend the grammar of Solidity to recognize the special annotations that will later be used in the tool. \\
 The annotations have certain requirements that can be summarized the following way. Later each requirement is discussed in detail.
 \begin{itemize}
-    \item Annotations can be specified at the top level.
+    \item Annotations can be specified at the top level of the contract.
     \item Annotations should be able to reference all variables used in the contract.
     \item Basic math operations can be used within annotations.
     \item Annotations can not have side effects.
     \item The type should be boolean at the highest level (that way they can be verified).
     \item There are two types of annotations invariants and pre- or postconditions to a function.
-    \item Global variables (\texttt{msg} and \texttt{address}) can be used in annotations.
 \end{itemize}
 
 The annotation syntax is heavily inspired from the JML annotation syntax. But has a lot less built in keywords since the setting is easier and the tool is less complex. The original grammar is extended in such a way that annotations can only be defined on the top level. The relevant parts of the original Solidity grammar can be seen in the snippet below. This does not include the full grammar specification but only the parts that are relevant for the annotation syntax.
@@ -150,20 +147,25 @@ LINE_COMMENT
 \end{lstlisting}
 An AnnotationDefinition is composed of multiple components. It has a \texttt{AnnotationStart}, \texttt{AnnotationKind} and \texttt{annotationExpression} component. The \texttt{AnnotationStart} token is used to signal that an annotation definition is coming next. This is defined as '//@' making it a line comment to other solidity compilers. This makes annotated solidity code still compilable by normal compilers. For the grammar to accept this notation the \texttt{LINE\_COMMENT} token has to be adjusted to not accept '@' as a second character. Otherwise all annotation comments would be recognized as a \texttt{LINE\_COMMENT} making it unusable. \\
 There are two types of annotations they are defined by the token \texttt{AnnotationKind}. They can either be a invariant or a pre- or post-condition of a function. \\
-Each annotation has an expression which has to be evaluated called \texttt{annotationExpression}. The expression parser rules are separated between \texttt{annotationExpression} and \texttt{primaryAnnotationExpression}. This is needed to keep the hierarchy in parsing and prevent using primary definitions with complex expressions. For example using the keyword '\textbackslash old' before parenthesis.\\
-The annotation expressions use a different parser rules than the expression rules that are used within the original Solidity grammar. The \texttt{annotationExpression} does not allow syntax like \texttt{expression + '++'} and to distinguish these a new parser rule was introduced for annotations only.
+Each annotation has an expression which has to be evaluated called \texttt{annotationExpression}. The expression parser rules are separated between \texttt{annotationExpression} and \texttt{primaryAnnotationExpression}. This is needed to keep the hierarchy in parsing and prevent using primary definitions within complex expressions. For example using the keyword '\textbackslash old' before parenthesis.\\
+The annotation expressions use a different parser rules than the expression rules that are used within the original Solidity grammar. The \texttt{annotationExpression} does not allow syntax like \texttt{expression + '++'} and to distinguish these a new parser rule was introduced for annotations only. \texttt{primaryExpression} and \texttt{identifier} are parser rules that are defined in the original Solidity grammar. The annotation expressions make use of these rules so that they do not have to be defined again.
+
+\subsection{Examples}
+In this section a couple of annotation examples will be given for example contracts. First a contract snippet is shown and later the meaning of this annotation is explained.
+\lstinputlisting[language=Solidity, linerange={4-6}]{examples/BasicAnnotations.sol}
+Defines an invariant that will be checked at the start and end of every function. \texttt{nr1} and \texttt{nr2} are global contract variables. \texttt{nr1} should always be bigger then \texttt{nr2}.
+\lstinputlisting[language=Solidity, linerange={9-13}]{examples/BasicAnnotations.sol}
+Defines a post condition on the function \texttt{doSomething()}. Checks if the owner is not changed during execution of the function.
+\lstinputlisting[language=Solidity, linerange={14-16}]{examples/BasicAnnotations.sol}
+Defines an invariant that will check if all elements in array \texttt{a} are positive.
+\lstinputlisting[language=Solidity, linerange={19-23}]{examples/BasicAnnotations.sol}
+Postcondition for the funcion \texttt{changeSomething()}. If the sender of this transaction is equal to the owner (\texttt{msg.sender}), variable \texttt{b} must be different from the start of the function. 
+
 
 \section{Type Checker}
 \label{sec:typechecker}
 \subsection{Design}
-Annotations have to be validated on certain aspects for them to be correct and usable. These aspects have to be verified first for the annotations to be useful in the next generation phase. The parser ensures annotations are syntactically correct however there are more properties that have to be checked.
-In short the validation step within the program has to do the following things:
-\begin{itemize}
-    \item Collect all variables within the contract.
-    \item Typecheck annotations.
-\end{itemize}
-
-The validation phase will consist of two programs that walk the complete parse tree. The first walk will collect all the variables and defined structures and store these in an information object. The second walk will type check each annotation individually. During this type checking the type of each identifier is looked up using the collected information from the first walk. 
+Annotations have to be validated on certain aspects for them to be correct and usable. These aspects have to be verified first for the annotations to be useful in the next generation phase. The parser ensures annotations are syntactically correct however there are more properties that have to be checked. The typecheck phase will consist of two phases that walk the complete parse tree. The first walk will collect all the variables and defined structures and store these in an information object. The second walk will type check each annotation individually. During this type checking the type of each identifier is looked up using the collected information from the first walk. 
 \subsection{Implementation}
 
 
