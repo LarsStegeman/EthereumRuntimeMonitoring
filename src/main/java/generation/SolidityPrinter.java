@@ -63,9 +63,9 @@ public class SolidityPrinter extends SolidityAnnotatedBaseVisitor<String>{
         String expression = visit(ctx.annotationExpression());
         expression = formatExpression(expression);
 
-        modifier +="function " + annotationInfo.getName() + "(" + annotationParameters + ") private{ \n";
+        modifier +=" function " + annotationInfo.getName() + "(" + annotationParameters + ") view private{ \n";
         modifier += annotationString;
-        modifier += "   " + expression + "\n";
+        modifier += "        " + expression + "\n";
         modifier += "    }\n";
         rewriter.insertAfter(ctx.stop, modifier);
         return null;
@@ -161,7 +161,7 @@ public class SolidityPrinter extends SolidityAnnotatedBaseVisitor<String>{
         //Store \old parameters and pass on function arguments
         List<AnnotationInformation> allAnnotations = getAllAnnotations(functionNameOriginal);
         String storeOldVariables = new String("");
-        String addBeforeBody = new String("");
+        String addBeforeBody = new String("\n");
         String addAfterBody = new String("");
         for(AnnotationInformation current: allAnnotations){
             String annotationParameters = new String();
@@ -192,9 +192,9 @@ public class SolidityPrinter extends SolidityAnnotatedBaseVisitor<String>{
                         storeOldVariables += "\n        " + var.getTypeString() + "[] memory " + var.name + " = " + var.name.substring(0, var.name.length()-4) + ";";            
                     }else if(var.type == SolidityType.MAPPING){
                         //First clear then fill again with current state
-                        storeOldVariables += "        "+ var.name + ".destroy();\n";
+                        storeOldVariables += "\n        "+ var.name + ".destroy();\n";
                         storeOldVariables += "        for(uint256 mapcopy=0; mapcopy < " + var.name.substring(0,var.name.length()-4) + ".size(); mapcopy++){\n";
-                        storeOldVariables += "           " + var.name + ".insert("+ var.name.substring(0,var.name.length()-4) + ".getKeyByIndex(mapcopy)," + var.name.substring(0,var.name.length()-4) + ".getValueByIndex(mapcopy));\n";
+                        storeOldVariables += "            " + var.name + ".insert("+ var.name.substring(0,var.name.length()-4) + ".getKeyByIndex(mapcopy)," + var.name.substring(0,var.name.length()-4) + ".getValueByIndex(mapcopy));\n";
                         storeOldVariables += "        }\n";
                     }else{
                         storeOldVariables += "\n        " + var.getTypeString() + " " + var.name + " = " + var.name.substring(0, var.name.length()-4) + ";";
@@ -206,14 +206,14 @@ public class SolidityPrinter extends SolidityAnnotatedBaseVisitor<String>{
         if(hasReturnParameters){
             newFunction+= storeOldVariables;
             newFunction+= addBeforeBody;
-            newFunction+= "\n        " + functionReturn  + " = "+ functionNameOriginal+ "_body("+ functionArguments + ");\n";
+            newFunction+= "        " + functionReturn  + " result = "+ functionNameOriginal+ "_body("+ functionArguments + ");\n";
             newFunction+= addAfterBody;
-            newFunction+= "    return result;\n";
+            newFunction+= "        return result;\n";
             newFunction+= "    }\n    ";    
         }else{
             newFunction+= storeOldVariables;
             newFunction+= addBeforeBody;
-            newFunction+= "\n        " + functionNameOriginal+ "_body("+ functionArguments + ");\n";
+            newFunction+= "        " + functionNameOriginal+ "_body("+ functionArguments + ");\n";
             newFunction+= addAfterBody;
             newFunction+= "    }\n    "; 
         }
@@ -322,9 +322,9 @@ public class SolidityPrinter extends SolidityAnnotatedBaseVisitor<String>{
             String importItMap = "import \"./itMapsLib.sol\";\n\n";
             rewriter.insertBefore(ctx.start, importItMap);
             String useItMap = 
-            "   using itMaps for itMaps.itMapUintUint;\n" +     
-            "   using itMaps for itMaps.itMapAddressUint;\n"+ 
-            "   using itMaps for itMaps.itMapUintAddress;\n";
+            "using itMaps for itMaps.itMapUintUint;\n" +     
+            "    using itMaps for itMaps.itMapAddressUint;\n"+ 
+            "    using itMaps for itMaps.itMapUintAddress;\n";
             rewriter.insertBefore(ctx.contractPart(0).start, useItMap);
         }
 
@@ -347,14 +347,14 @@ public class SolidityPrinter extends SolidityAnnotatedBaseVisitor<String>{
             }
             if(var!= null && !(var.from.length > 1)){
                 if(var.from[0] == SolidityType.ADDRESS && var.to == SolidityType.INTEGER){
-                    rewriter.replace(ctx.typeName().start, ctx.identifier().start, "itMaps.itMapAddressUint " + ctx.identifier().getText() + ";\n");
-                    rewriter.insertAfter(ctx.identifier().stop, "itMaps.itMapAddressUint " + ctx.identifier().getText() + "_old");
+                    rewriter.replace(ctx.typeName().start, ctx.identifier().start, "    itMaps.itMapAddressUint " + ctx.identifier().getText() + ";\n");
+                    rewriter.insertAfter(ctx.identifier().stop, "    itMaps.itMapAddressUint " + ctx.identifier().getText() + "_old");
                 }else if(var.from[0] == SolidityType.INTEGER && var.to == SolidityType.INTEGER){
-                    rewriter.replace(ctx.typeName().start, ctx.identifier().start, "itMaps.itMapUintUint " + ctx.identifier().getText());
-                    rewriter.insertAfter(ctx.identifier().stop, "itMaps.itMapUintUint " + ctx.identifier().getText() + "_old");
+                    rewriter.replace(ctx.typeName().start, ctx.identifier().start, "    itMaps.itMapUintUint " + ctx.identifier().getText());
+                    rewriter.insertAfter(ctx.identifier().stop, "    itMaps.itMapUintUint " + ctx.identifier().getText() + "_old");
                 }else if(var.from[0] == SolidityType.INTEGER && var.to == SolidityType.ADDRESS){
-                    rewriter.replace(ctx.typeName().start, ctx.identifier().start, "itMaps.itMapUintAddress " + ctx.identifier().getText());
-                    rewriter.insertAfter(ctx.identifier().stop, "itMaps.itMapUintAddress " + ctx.identifier().getText() + "_old");
+                    rewriter.replace(ctx.typeName().start, ctx.identifier().start, "    itMaps.itMapUintAddress " + ctx.identifier().getText());
+                    rewriter.insertAfter(ctx.identifier().stop, "    itMaps.itMapUintAddress " + ctx.identifier().getText() + "_old");
                 }
             }
         }
@@ -384,5 +384,4 @@ public class SolidityPrinter extends SolidityAnnotatedBaseVisitor<String>{
         }
         return null;
     }
-
 }
