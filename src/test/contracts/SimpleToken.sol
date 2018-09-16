@@ -1,4 +1,4 @@
-pragma solidity ^0.4.20;
+pragma solidity ^0.4.23;
 
 contract SimpleToken {
 	/* This creates an array with all balances */
@@ -16,16 +16,7 @@ contract SimpleToken {
 	}
 
 	/* Send coins */
-	/* @ensures 		
-			balanceOf[_to] == \old(balanceOf[_to]) + _value &&
-			balanceOf[msg.sender] == \old(balanceOf[msg.sender]) - _value &&
-			forall x : x != _to || x != msg.sender : balanceOf[x] == \old(balanceOf[x]) &&
-			_to != msg.sender
-			||
-			_to == msg.sender
-	*/
-	//@ pre _to != msg.sender
-	//@ post balanceOf[_to] == (\old(balanceOf[_to]) + _value) && balanceOf[msg.sender] == (\old(balanceOf[msg.sender]) - _value)
+	//@ post balanceOf[_to] == (\old(balanceOf[_to]) + _value) && balanceOf[msg.sender] == (\old(balanceOf[msg.sender]) - _value) && \forall(x in balanceOf: (x != _to && x != msg.sender) -> balanceOf[x] == \old(balanceOf[x])) && msg.sender != _to
 	function transfer(address _to, uint256 _value) public {
 		// Check if the sender has enough
 		require(balanceOf[msg.sender] >= _value);
