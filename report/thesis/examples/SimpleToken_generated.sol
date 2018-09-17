@@ -16,9 +16,6 @@ contract SimpleToken {
 
 	/* Initializes contract with initial supply tokens to the creator of the contract */
 	function SimpleToken(uint256 initialSupply) public {
-        SimpleToken_body(initialSupply);
-    }
-    function SimpleToken_body(uint256 initialSupply) private {
 		// Give the creator all initial tokens
 		balanceOf.insert(msg.sender,initialSupply);              
 		totalSupply = initialSupply;

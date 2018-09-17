@@ -202,29 +202,29 @@ public class SolidityPrinter extends SolidityAnnotatedBaseVisitor<String>{
                 }
             }
         }
+        if(allAnnotations.size() != 0){
+            if(hasReturnParameters){
+                newFunction+= storeOldVariables;
+                newFunction+= addBeforeBody;
+                newFunction+= "        " + functionReturn  + " result = "+ functionNameOriginal+ "_body("+ functionArguments + ");\n";
+                newFunction+= addAfterBody;
+                newFunction+= "        return result;\n";
+                newFunction+= "    }\n    ";    
+            }else{
+                newFunction+= storeOldVariables;
+                newFunction+= addBeforeBody;
+                newFunction+= "        " + functionNameOriginal+ "_body("+ functionArguments + ");\n";
+                newFunction+= addAfterBody;
+                newFunction+= "    }\n    "; 
+            }
 
-        if(hasReturnParameters){
-            newFunction+= storeOldVariables;
-            newFunction+= addBeforeBody;
-            newFunction+= "        " + functionReturn  + " result = "+ functionNameOriginal+ "_body("+ functionArguments + ");\n";
-            newFunction+= addAfterBody;
-            newFunction+= "        return result;\n";
-            newFunction+= "    }\n    ";    
-        }else{
-            newFunction+= storeOldVariables;
-            newFunction+= addBeforeBody;
-            newFunction+= "        " + functionNameOriginal+ "_body("+ functionArguments + ");\n";
-            newFunction+= addAfterBody;
-            newFunction+= "    }\n    "; 
+            //Find correct token to add the extra function
+            Token tkn = ctx.start;
+            rewriter.insertBefore(tkn, newFunction);
+            rewriter.replace(ctx.identifier().start, functionNameOriginal + "_body");
+            // Replace visibility modifier with private, leave all other modifiers in place, add private if no visibility modifier found
+            oldFunctionVisibility(ctx);
         }
-
-        //Find correct token to add the extra function
-        Token tkn = ctx.start;
-        rewriter.insertBefore(tkn, newFunction);
-        rewriter.replace(ctx.identifier().start, functionNameOriginal + "_body");
-        // Replace visibility modifier with private, leave all other modifiers in place, add private if no visibility modifier found
-        oldFunctionVisibility(ctx);
-
         //Visit rest of the block
         visit(ctx.block());
         return null;
