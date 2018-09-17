@@ -200,12 +200,11 @@ Note that this contract is not ERC20 compliant. ERC20 is the interface that most
 \subsubsection{Annotation}
 The above section describes the implementation of the token contract. However there is also a specification given in words as to what the contract should do. A few properties of this specification can be declared explicitly using pre and postconditions or invariants. These properties are important to the functionality of the contract. 
 The first property is that when a transfer function is executed the balance of the \texttt{\_to} address is incremented with the \texttt{\_value}. And the balance of the sender is decreased with the same value. The rest of the balances remains the same. This property should be checked after the execution of the \texttt{transfer} function. Using the correct syntax the annotation will look:
-\begin{lstlisting}[basicstyle=\ttfamily]
+\begin{lstlisting}[basicstyle=\ttfamily, breaklines=true ]
 //@ post 
  balanceOf[_to] == (\old(balanceOf[_to]) + _value) 
  && balanceOf[msg.sender] == (\old(balanceOf[msg.sender]) - _value) 
- && \forall(x in balanceOf: 
-   (x != _to && x != msg.sender) -> balanceOf[x] == \old(balanceOf[x])) 
+ && \forall(x in balanceOf: (x != _to && x != msg.sender) -> balanceOf[x] == \old(balanceOf[x])) 
  && msg.sender != _to 
 \end{lstlisting}
 Going over it line by line:
@@ -226,6 +225,17 @@ Note that the functionality of this contract is exactly the same as the previous
 
 
 \subsection{Vulnerable Contract}
+The next example is a simple contract with a vulnerability. The vulnerability will not be easily visible when reading the contract, but with extra annotations added this is visible. This contract is not actually in use but is based on a CryptoRoulette contract \footnote{https://github.com/misterch0c/Solidlity-Vulnerable/blob/master/honeypots/CryptoRoulette.sol}. Most of the contract code is omitted for this example. The idea is that the contract keeps a list of messages, for each message the sender and the message are saved. Only the address \texttt{admin} has extra privileges to possibly delete messages or delete the contract (these functions are not in the snippet).
+\lstinputlisting[language=Solidity, tabsize = 2, literate={\ \ }{{\ }}1]{examples/VulnerableContract.sol}
+
+\subsubsection{Annotation}
+The annotation that is added to the function \texttt{logMessage} checks the basic behaviour of the function. The address \texttt{admin} should not be changed, and the number of messages should be increased by one. This should be checked after the function is executed.
+\begin{lstlisting}[basicstyle=\ttfamily, breaklines=true ]
+//@ post admin == \old(admin) && (nrOfMessages == (\old(nrOfMessages) + 1))
+\end{lstlisting}
+\subsubsection{Generated Code}
+The code that is generated stores the original variables in memory before calling the function body. After the function is executed the old variables will be compared to the current state variables. Every call to the function \texttt{logMessage} will report an error since each time the state variables \texttt{admin} and \texttt{nrOfMessages} are changed. These are changed because the struct \texttt{message} within the function body defaults to \texttt{storage}. 
+\lstinputlisting[language=Solidity, tabsize = 2, literate={\ \ }{{\ }}1]{examples/VulnerableContract_generated.sol}
 
 \section{Future work}
 \begin{itemize}
