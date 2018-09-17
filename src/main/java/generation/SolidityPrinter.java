@@ -84,7 +84,7 @@ public class SolidityPrinter extends SolidityAnnotatedBaseVisitor<String>{
             if(ctx.getStart().getText().equals("!")){
                 result = "! " + visit(ctx.annotationExpression(0));
             }else{
-                result =  "(" + visit(ctx.annotationExpression(0)) + " )";
+                result =  "(" + visit(ctx.annotationExpression(0)) + ")";
             }
         }else{
             // First visit children and get their type
@@ -136,7 +136,7 @@ public class SolidityPrinter extends SolidityAnnotatedBaseVisitor<String>{
         // - Add annotations before and after to new funcion
         // - Pass through all variables
         String functionNameOriginal = ctx.identifier().getText();
-        String newFunction = rewriter.getText(new Interval(ctx.start.getTokenIndex(), ctx.block().start.getTokenIndex()));
+        String newFunction = newFunctionDeclaration(ctx);
 
         //Format function arguments
         String functionArguments = new String();
@@ -222,11 +222,50 @@ public class SolidityPrinter extends SolidityAnnotatedBaseVisitor<String>{
         Token tkn = ctx.start;
         rewriter.insertBefore(tkn, newFunction);
         rewriter.replace(ctx.identifier().start, functionNameOriginal + "_body");
-        rewriter.replace(ctx.modifierList().start,ctx.modifierList().stop, "private");
+        // Replace visibility modifier with private, leave all other modifiers in place, add private if no visibility modifier found
+        oldFunctionVisibility(ctx);
 
         //Visit rest of the block
         visit(ctx.block());
         return null;
+    }
+
+    public void oldFunctionVisibility(FunctionDefinitionContext ctx){
+        if(ctx.modifierList().PublicKeyword().size() != 0){
+            rewriter.replace(ctx.modifierList().PublicKeyword(0).getSymbol(), "private");
+        }else if(ctx.modifierList().InternalKeyword().size() != 0){
+            rewriter.replace(ctx.modifierList().InternalKeyword(0).getSymbol(), "private");
+        }else if(ctx.modifierList().PrivateKeyword().size() != 0){
+            rewriter.replace(ctx.modifierList().PrivateKeyword(0).getSymbol(), "private");
+        }else if(ctx.modifierList().ExternalKeyword().size() != 0){
+            rewriter.replace(ctx.modifierList().ExternalKeyword(0).getSymbol(), "private");
+        }else{
+            // No visibility parameter
+            rewriter.insertAfter(ctx.modifierList().getStop(), " private");
+        }    
+    }
+
+    public String newFunctionDeclaration(FunctionDefinitionContext ctx){
+        String result = new String();
+        result += rewriter.getText(new Interval(ctx.start.getTokenIndex(), ctx.parameterList().stop.getTokenIndex()));
+        //Get visiblity modifiers if it has any else public
+        if(ctx.modifierList().PublicKeyword().size() != 0){
+            result += " public ";
+        }else if(ctx.modifierList().ExternalKeyword().size() != 0){
+            result += " external ";
+        }else if(ctx.modifierList().InternalKeyword().size() != 0){
+            result += " internal ";
+        }else if(ctx.modifierList().PrivateKeyword().size() != 0){
+            result += " private ";
+        }else{
+            result += " public ";
+        }
+        //Return parameters are the same
+        if(ctx.returnParameters() != null){
+            result += ctx.returnParameters().getText();
+        }
+        result += "{";
+        return result;
     }
 
     public String printAnnotationLoop(AnnotationExpressionContext ctx){
