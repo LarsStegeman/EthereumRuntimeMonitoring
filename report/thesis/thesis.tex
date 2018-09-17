@@ -159,8 +159,7 @@ Defines a post condition on the function \texttt{doSomething()}. Checks if the o
 \lstinputlisting[language=Solidity, linerange={14-16}]{examples/BasicAnnotations.sol}
 Defines an invariant that will check if all elements in array \texttt{a} are positive.
 \lstinputlisting[language=Solidity, linerange={19-23}]{examples/BasicAnnotations.sol}
-Postcondition for the funcion \texttt{changeSomething()}. If the sender of this transaction is equal to the owner (\texttt{msg.sender}), variable \texttt{b} must be different from the start of the function. 
-
+Postcondition for the function \texttt{changeSomething()}. If the sender of this transaction is equal to the owner (\texttt{msg.sender}), variable \texttt{b} must be different from the start of the function. 
 
 \section{Type Checker}
 \label{sec:typechecker}
@@ -176,6 +175,7 @@ Annotations have to be validated on certain aspects for them to be correct and u
     \item Explain how functions are calling the code for checking annotations. Original Function will be transformed to a private function and renamed to 'functionName"+ \_body. New function calls this function with the extra annotations.
     \item Implementation of generation is using a TokenStreamRewriter (with whitespace) and an abstract parse tree (only tokens that are in grammar). Tokens in both structures know the position, this way the original solidity code can be printed and extra code can be added through traversing the parse tree.
 \end{itemize}
+\subsection{Mapping}
 
 \section{Tool Usage}
 
@@ -187,6 +187,45 @@ Annotations have to be validated on certain aspects for them to be correct and u
   \item Show difference in gas usage?
   \item Show how forall annotations are handled (example contract of minimal token).
 \end{itemize}
+In this section we present two case studies of smart contracts. These smart contracts will be annotated and the tool will generate the contract code with extra checks added to the code. The first example is a minimal token implementation. The second example is a contract with a vulnerability which we will show can be detected with the correct annotations.
+
+\subsection{SimpleToken}
+In this example we will use the contract SimpleToken. The contract code can be found on the Ethereum Foundation website \footnote{\url{https://www.ethereum.org/token}}. 
+It models a minimum viable token. To keep the state of the contract a \texttt{mapping} is used that maps \texttt{address} to \texttt{uint}. This mapping is kept in the contracts' internal storage and is stored on the blockchain. It indicates which amount each address holds of this token and changes each time the \texttt{transfer} function is called. The \texttt{transfer} function requires two parameters an address (\texttt{\_to})  and an uint(\texttt{\_value}) which specifies the amount to be sent. The from address is determined from the global variable \texttt{msg} which is present in each transaction. The require statements in the transfer function will check if the sender has enough balance to sent the amount specified in \texttt{\_value}, and test for overflows in the balance of the receiver. If one of the two fails an exception will be thrown and the changes this transaction made will be reverted.\\
+When the contract is created the constructor will be called. In this constructor the initialSupply is given as a parameter. All the initial supply is given to the contract creator (\texttt{msg.sender}). The totalSupply value is assigned and cannot be changed after initialization.\\
+Note that this contract is not ERC20 compliant. ERC20 is the interface that most tokens use to implement the desired functionality. This interface is defined in order for all wallets and exchanges to be able to handle different tokens \footnote{\url{https://github.com/ethereum/EIPs/blob/master/EIPS/eip-20.md}}. The main difference is that this contract does not have an \texttt{approve} mapping which lets users approve a certain transfer of tokens. Also this SimpleToken does not allow \texttt{minting} or \texttt{burning} of tokens, in other words the total supply is fixed. Below we can see the Solidity source code of the contract SimpleToken.
+
+\lstinputlisting[language=Solidity, tabsize = 2]{examples/SimpleToken.sol}
+
+\subsubsection{Annotation}
+The above section describes the implementation of the token contract. However there is also a specification given in words as to what the contract should do. A few properties of this specification can be declared explicitly using pre and postconditions or invariants. These properties are important to the functionality of the contract. 
+The first property is that when a transfer function is executed the balance of the \texttt{\_to} address is incremented with the \texttt{\_value}. And the balance of the sender is decreased with the same value. The rest of the balances remains the same. This property should be checked after the execution of the \texttt{transfer} function. Using the correct syntax the annotation will look:
+\begin{lstlisting}[basicstyle=\ttfamily]
+//@ post 
+ balanceOf[_to] == (\old(balanceOf[_to]) + _value) 
+ && balanceOf[msg.sender] == (\old(balanceOf[msg.sender]) - _value) 
+ && \forall(x in balanceOf: 
+   (x != _to && x != msg.sender) -> balanceOf[x] == \old(balanceOf[x])) 
+ && msg.sender != _to 
+\end{lstlisting}
+Going over it line by line:
+\begin{enumerate}
+  \item Indicate that this is an annotation and not a comment. And this is of type post condition
+  \item Balance of \texttt{\_to} gets incremented by \texttt{\_value}
+  \item Balance of \texttt{msg.sender} gets decremented by \texttt{\_value}
+  \item Rest of the balances does not change.
+  \item This is makes the annotation also valid for the special case where \texttt{\_to} is equal to \texttt{msg.sender}.
+\end{enumerate}
+
+\subsubsection{Generated Code}
+When the tool gets executed with the above contract as input including the annotation, the tool will parse the annotation and output generated solidity code with extra checks. 
+The complete generated code can be seen below.
+\lstinputlisting[language=Solidity, tabsize = 2, literate={\ \ }{{\ }}1]{examples/SimpleToken_generated.sol}
+
+Note that the functionality of this contract is exactly the same as the previous code but with extra checks. This means that this approach is only feasible for development purposes. Since the gas cost of executing the previous contract is much lower then that of the runtime monitored contract. Also the more addresses that get added to the iterable map the more gas the transaction will consume.
+
+
+\subsection{Vulnerable Contract}
 
 \section{Future work}
 \begin{itemize}
