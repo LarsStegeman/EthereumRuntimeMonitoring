@@ -102,10 +102,13 @@ contractPart
     | enumDefinition ;
 \end{lstlisting}
 In the original grammar the definition of \texttt{contractPart} is what defines the declaration of variables and the definitions for structs and functions. This is where the extra annotations have to be added to the grammar. The snippet below shows the basic definition of an annotation. This is not the complete grammar some of the tokens are omitted from this snippet, since they are not required to understand the grammar definition.
-\begin{lstlisting}[basicstyle=\ttfamily]
+\begin{lstlisting}[basicstyle=\ttfamily, breaklines=true]
 grammar SolidityAnnotated;
 import Solidity;
 
+@header {package generated;}
+  
+//Added annotationDefinition. This enables annotations to be on the top level only.
 contractPart
   : stateVariableDeclaration
   | usingForDeclaration
@@ -115,11 +118,13 @@ contractPart
   | functionDefinition
   | eventDefinition
   | enumDefinition 
-  <@\textcolor{red}{  | annotationDefinition ;}@>
+  | annotationDefinition ;
 
 annotationDefinition
-  : AnnotationStart AnnotationKind annotationExpression ;
+  : AnnotationStart AnnotationKind annotationExpression;
 
+// Same as the expression rule except it does not include changes, only comparisons
+// Added '->' for then.
 annotationExpression
   : '(' annotationExpression ')'
   | annotationExpression compareOp annotationExpression
@@ -127,23 +132,28 @@ annotationExpression
   | annotationExpression integerOpBoolean annotationExpression
   | annotationExpression integerOpInteger annotationExpression
   | '!'annotationExpression
-  | ('\\forall' | '\\exists') '(' identifier elementaryTypeName ':' annotationExpression? ':' annotationExpression')'
-  | primaryAnnotationExpression ;
+  | ('\\forall' | '\\exists') '(' identifier 'in' identifier ':' annotationExpression')'
+  | primaryAnnotationExpression;
 
 primaryAnnotationExpression
   : primaryExpression 
   | primaryAnnotationExpression '.' identifier
-  | primaryAnnotationExpression '[' primaryExpression ']'
-  | '\\old' '(' primaryAnnotationExpression ')' ;
+  | primaryAnnotationExpression '[' primaryAnnotationExpression ']'
+  | '\\old' '(' primaryAnnotationExpression ')';
 
+//Annotation Tokens
 AnnotationStart
-  : '//@' ;
+  : '//@';
 
 AnnotationKind
-  : 'inv'| 'pre'| 'post' ;
+  : 'inv'| 'pre'| 'post';
 
+// Remove '@' from first position of LINE_COMMENT token. 
 LINE_COMMENT 
-  : '//' ~[@] ~[\r\n]* -> channel(HIDDEN) ;
+  : '//' ~[@] ~[\r\n]* -> channel(HIDDEN);
+// Send whitespace to channel hidden.
+WS
+  : [ \t\r\n\u000C]+ -> channel(HIDDEN);
 \end{lstlisting}
 An AnnotationDefinition is composed of multiple components. It has a \texttt{AnnotationStart}, \texttt{AnnotationKind} and \texttt{annotationExpression} component. The \texttt{AnnotationStart} token is used to signal that an annotation definition is coming next. This is defined as '//@' making it a line comment to other solidity compilers. This makes annotated solidity code still compilable by normal compilers. For the grammar to accept this notation the \texttt{LINE\_COMMENT} token has to be adjusted to not accept '@' as a second character. Otherwise all annotation comments would be recognized as a \texttt{LINE\_COMMENT} making it unusable. \\
 There are two types of annotations they are defined by the token \texttt{AnnotationKind}. They can either be a invariant or a pre- or post-condition of a function. \\
@@ -164,7 +174,7 @@ Postcondition for the function \texttt{changeSomething()}. If the sender of this
 \section{Type Checker}
 \label{sec:typechecker}
 \subsection{Design}
-Annotations have to be validated on certain aspects for them to be correct and usable. These aspects have to be verified first for the annotations to be useful in the next generation phase. The parser ensures annotations are syntactically correct however there are more properties that have to be checked. The typecheck phase will consist of two phases that walk the complete parse tree. The first walk will collect all the variables and defined structures and store these in an information object. The second walk will type check each annotation individually. During this type checking the type of each identifier is looked up using the collected information from the first walk. 
+Annotations have to be validated on certain aspects for them to be correct and usable. These aspects have to be verified first for the annotations to be useful in the next generation phase. The parser ensures annotations are syntactically correct however there are more properties that have to be checked. The typecheck phase will consist of two passages that walk the complete parse tree. The first walk will collect all the variables and defined structures and store these in an information object. The second walk will type check each annotation individually. During this type checking the type of each identifier is looked up using the collected information from the first walk. 
 \subsection{Implementation}
 
 
@@ -202,10 +212,10 @@ The above section describes the implementation of the token contract. However th
 The first property is that when a transfer function is executed the balance of the \texttt{\_to} address is incremented with the \texttt{\_value}. And the balance of the sender is decreased with the same value. The rest of the balances remains the same. This property should be checked after the execution of the \texttt{transfer} function. Using the correct syntax the annotation will look:
 \begin{lstlisting}[basicstyle=\ttfamily, breaklines=true ]
 //@ post 
- balanceOf[_to] == (\old(balanceOf[_to]) + _value) 
+ (balanceOf[_to] == (\old(balanceOf[_to]) + _value) 
  && balanceOf[msg.sender] == (\old(balanceOf[msg.sender]) - _value) 
- && \forall(x in balanceOf: (x != _to && x != msg.sender) -> balanceOf[x] == \old(balanceOf[x])) 
- && msg.sender != _to 
+ && \forall(x in balanceOf: (x != _to && x != msg.sender) -> balanceOf[x] == \old(balanceOf[x]))) 
+ || msg.sender == _to 
 \end{lstlisting}
 Going over it line by line:
 \begin{enumerate}
@@ -213,7 +223,7 @@ Going over it line by line:
   \item Balance of \texttt{\_to} gets incremented by \texttt{\_value}
   \item Balance of \texttt{msg.sender} gets decremented by \texttt{\_value}
   \item Rest of the balances does not change.
-  \item This is makes the annotation also valid for the special case where \texttt{\_to} is equal to \texttt{msg.sender}.
+  \item This is makes the annotation also valid for the special case where \texttt{\_to} is equal to \texttt{msg.sender}. In this case all of the balances do not change.
 \end{enumerate}
 
 \subsubsection{Generated Code}

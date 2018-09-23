@@ -22,14 +22,14 @@ contract SimpleToken {
 	}
 
 	/* Send coins */
-	//@ post balanceOf[_to] == (\old(balanceOf[_to]) + _value) && balanceOf[msg.sender] == (\old(balanceOf[msg.sender]) - _value) && \forall(x in balanceOf: (x != _to && x != msg.sender) -> balanceOf[x] == \old(balanceOf[x])) && msg.sender != _to
+	//@ post (balanceOf[_to] == (\old(balanceOf[_to]) + _value) && balanceOf[msg.sender] == (\old(balanceOf[msg.sender]) - _value) && \forall(x in balanceOf: (x != _to && x != msg.sender) -> balanceOf[x] == \old(balanceOf[x]))) || msg.sender == _to
     function annotation0(address _to, uint256 _value) view private{ 
         bool expression0= true;
         for(uint256 i=0; i<balanceOf.size() &&expression0;i++){
             var x= balanceOf.getKeyByIndex(i);
             expression0=!(x!=_to&&x!=msg.sender)||balanceOf.get(x)==balanceOf_old.get(x);
     }
-        assert(balanceOf.get(_to)==(balanceOf_old.get(_to)+_value)&&balanceOf.get(msg.sender)==(balanceOf_old.get(msg.sender)-_value)&&expression0&&msg.sender!=_to);
+        assert((balanceOf.get(_to)==(balanceOf_old.get(_to)+_value)&&balanceOf.get(msg.sender)==(balanceOf_old.get(msg.sender)-_value)&&expression0)||msg.sender==_to);
     }
 
 	function transfer(address _to, uint256 _value) public {
