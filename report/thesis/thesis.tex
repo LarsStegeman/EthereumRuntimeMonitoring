@@ -177,10 +177,14 @@ Postcondition for the function \texttt{changeSomething()}. If the sender of this
 Annotations have to be validated on certain aspects for them to be correct and usable. These aspects have to be verified first for the annotations to be useful in the next generation phase. The parser ensures annotations are syntactically correct however there are more properties that have to be checked. The typecheck phase will consist of two passages that walk the complete parse tree. The first walk will collect all the variables and defined structures and store these in an information object. The second walk will type check each annotation individually. During this type checking the type of each identifier is looked up using the collected information from the first walk. 
 \subsection{Implementation}
 During the first phase all the variables, structs and function definitions are stored in an object. This object is later used by the second phase to retrieve information.
-\begin{lstlisting}[basicstyle=\ttfamily, breaklines=true, language=java ]
-ArrayList<SolidityVariable> identifiers;
-ArrayList<SolidityFunction> functions;
-ArrayList<SolidityStruct> structs;
+\begin{lstlisting}[breaklines=true, language=Java ]
+public class ValidationInformation {
+  ArrayList<SolidityVariable> identifiers;
+  ArrayList<SolidityFunction> functions;
+  ArrayList<SolidityStruct> structs;
+
+  ...
+}
 \end{lstlisting}
 \begin{itemize}
   \item SolidityVariable is an object which has a name (the identifier) and a type. These resemble state variables in a contract.
@@ -193,12 +197,79 @@ In case complex types are used such as structs the additional information is ret
 
 \section{Generation}
 \label{sec:generation}
+% \begin{itemize}
+%     \item Explain generation of functions for annotations. Each annotation will be transformed to a function, the function takes in arguments that are also generated automatically.
+%     \item Explain how functions are calling the code for checking annotations. Original Function will be transformed to a private function and renamed to 'functionName"+ \_body. New function calls this function with the extra annotations.
+%     \item Implementation of generation is using a TokenStreamRewriter (with whitespace) and an abstract parse tree (only tokens that are in grammar). Tokens in both structures know the position, this way the original solidity code can be printed and extra code can be added through traversing the parse tree.
+% \end{itemize}
+\subsection{Design}
+The next step in the tool process is the generation phase. In this phase new code will be generated and added to the original contract. Requirements are that the interface of the contract does not change. The functional behaviour of the contract should remain the same and the added code only performs extra checks. For each added annotation three steps have to be performed
+\begin{enumerate}
+  \item Generate function for each annotation which checks the expression. This function should have the correct number of arguments that are used within the annotation. Arguments are variables that are not reachable from the global scope and used in the expression. These are \texttt{old} variables and function variables.
+  \item For each original function of the contract: Create a wrapper function which calls the original function body.
+  \item Add all annotations that should be checked to the wrapper function. All variables that should be stored before the function call should be stored in memory before executing the function body. 
+\end{enumerate}
+\subsection{Implementation}
+During the typechecking phase the object \texttt{AnnotationInformation} is created for each annotation it parses. This object contains the following information:
+\begin{lstlisting}[breaklines=true, language=Java ]
+public class AnnotationInformation{  
+  ParserRuleContext node;
+  private String name;
+  private Map<SolidityVariable, Boolean> variables;
+  private String type;
+  private String function;
+
+  ...
+}
+\end{lstlisting}
 \begin{itemize}
-    \item Explain generation of functions for annotations. Each annotation will be transformed to a function, the function takes in arguments that are also generated automatically.
-    \item Explain how functions are calling the code for checking annotations. Original Function will be transformed to a private function and renamed to 'functionName"+ \_body. New function calls this function with the extra annotations.
-    \item Implementation of generation is using a TokenStreamRewriter (with whitespace) and an abstract parse tree (only tokens that are in grammar). Tokens in both structures know the position, this way the original solidity code can be printed and extra code can be added through traversing the parse tree.
+  \item Reference to the node in the parser tree.
+  \item A unique name for the annotation.
+  \item A list of arguments used in the function. The boolean indicates if it should be included as an argument for the function.
+  \item Type of the annotation. Invariant, Pre or Post-condition. This indicates where it should be added to the wrapper function.
+  \item Function the annotation is declared above. Null in case this is an invariant.
 \end{itemize}
-\section{Design}
+When parsing the tree the correct \texttt{AnnotationInformation} object is retrieved using the parse tree node. The function declaration is constructed using the name and arguments from this object. The body of this function can be constructed from the \texttt{expression} that is within the parse tree object. In most of the cases the code can directly printed but in some the expression has to be altered:
+\begin{itemize}
+  \item The expressions \texttt{\textbackslash forall} and \texttt{\textbackslash exists} have to be replaced with a loop, that checks the expression for all the elements of the collection. 
+  \item The usage of \texttt{\textbackslash old} has to be replaced with the variable that was created before the function execution. This means rewriting the variable \texttt{\textbackslash old(identifier)} to \texttt{identifier\_old}. In case of structs this is a bit more works since \texttt{\textbackslash old(a.b)} should be replaced with \texttt{a\_old.b}.
+  \item Boolean operator \texttt{a->b} which can be used in annotations is not valid Solidiy code, and has to be replaced with \texttt{!a||b}
+\end{itemize}
+Since the annotations are type checked the generated code will always be valid. The result is always a boolean value. The actual testing of this value is done using an \texttt{assert} statement. If the value is false it means that the transaction will be reverted and all gas will be consumed. This could be changed to for example an \texttt{event}.\\
+When the parser encounters a function it will check if annotations have to be added. This means searching through all \texttt{AnnotationInformation} objects and see if any of them reference the current function or are null (invariant). The original function will be transformed to a private function and renamed to 'functionName"+ \_body. The new wrapper function will call this function. The wrapper function does two other things that are important that is saving the current state of variables that are later to be used in annotations. It will only do this for variables that are referenced within \texttt{\textbackslash old(identifier)}. The second thing it does is add function calls to annotation before and after executing the original body. Annotations of type invariant are added before and after, preconditions only before and postconditions only after. \\
+The actual printing of the contract code works with a \texttt{TokenStreamRewriter}\footnote{TODO doc tokenstreamrewriter}, which is part of the ANTLR framework. The problem with printing the contract code is that the parse tree skips all whitespace. This means that the whitespace is lost in the parsing process. Including the whitespace in the parser rules would complicate the grammar because they have to be added to every rule. The ANTLR book also has an example on a similar case like this \footnote{TODO ShiftVarComments}. The idea is that the lexer gives all tokens a number in order, but the tokens are split between two channels. The parse tree only parses tokens on the first channel and ignores the others. The \texttt{TokenStreamRewriter} has the information of both channels. The token positions are still known and this way the \texttt{TokenStreamRewriter} can replace/insert text based on parser rule nodes positions. The tool uses the rewriter to insert the annotation blocks and function body in the correct places while preserving whitespace of the original contract code.
+
+\subsection{Mappings}
+The above section holds for all constructions except for \texttt{mappings}. A mapping cannot be stored in memory and are not iterable since the key set is not known. This gives problems 1) when storing the variable for \texttt{\textbackslash old()} and 2) checking a expression for all elements in a mapping. \\
+This is solved by using an iterable mapping \footnote{\url{https://github.com/szerintedmi/solidity-itMapsLib}}. This works by wrapping the mapping definition within a struct. This struct contains the mapping and an array. The array stores the indexes which are used. Since the indexes are in an array these can be iterated. The key and value can be retrieved using the index. The value can also be retrieved using the key. In order for this to work extra code has to be added to the contract.
+\begin{itemize}
+  \item Import the library at the beginning of the contract.
+  \begin{lstlisting}[breaklines=true, language=Solidity ]
+  import "./itMapsLib.sol";
+  \end{lstlisting}
+  \item Use library function when doing operations on the struct.
+  \begin{lstlisting}[breaklines=true, language=Solidity ]
+  using itMaps for itMaps.itMapUintUint;
+  using itMaps for itMaps.itMapAddressUint;
+  using itMaps for itMaps.itMapUintAddress;
+  \end{lstlisting}
+  \item Replace declaration of mapping with iterable mapping.
+  \begin{lstlisting}[breaklines=true, language=Solidity ]
+  //mapping(address => uint256) a;
+  itMaps.itMapAddressUint a; 
+  \end{lstlisting}
+  \item Create mapping\_old for annotation purposes.
+  \begin{lstlisting}[breaklines=true, language=Solidity ]
+  itMaps.itMapAddressUint a_old; 
+  \end{lstlisting}
+  \item Replace each mapping reference with \texttt{.get(...)} or \texttt{.set(...)} depending on the context.
+  \begin{lstlisting}[breaklines=true, language=Solidity ]
+  //uint256 b = a['0x0'];
+  uint256 b = a.get('0x0');
+  //a['0x1'] = 1;
+  a.set('0x1', 1); 
+  \end{lstlisting}
+\end{itemize}
 
 \subsection{Limitations}
 
@@ -206,12 +277,12 @@ In case complex types are used such as structs the additional information is ret
 
 
 \section{Case study}
-\begin{itemize}
-  \item Take contract that has vulnerability and add annotations
-  \item Show parts of generated code that will throw an event.
-  \item Show difference in gas usage?
-  \item Show how forall annotations are handled (example contract of minimal token).
-\end{itemize}
+% \begin{itemize}
+%   \item Take contract that has vulnerability and add annotations
+%   \item Show parts of generated code that will throw an event.
+%   \item Show difference in gas usage?
+%   \item Show how forall annotations are handled (example contract of minimal token).
+% \end{itemize}
 In this section we present two case studies of smart contracts. These smart contracts will be annotated and the tool will generate the contract code with extra checks added to the code. The first example is a minimal token implementation. The second example is a contract with a vulnerability which we will show can be detected with the correct annotations.
 
 \subsection{SimpleToken}
@@ -223,7 +294,7 @@ Note that this contract is not ERC20 compliant. ERC20 is the interface that most
 \lstinputlisting[language=Solidity, tabsize = 2]{examples/SimpleToken.sol}
 
 \subsubsection{Annotation}
-The above section describes the implementation of the token contract. However there is also a specification given in words as to what the contract should do. A few properties of this specification can be declared explicitly using pre and postconditions or invariants. These properties are important to the functionality of the contract. 
+The above section describes the implementation of the token contract. However there is also a specification given in words as to what the contract should do. A few properties of this specification can be declared explicitly using pre and post-conditions or invariants. These properties are important to the functionality of the contract. 
 The first property is that when a transfer function is executed the balance of the \texttt{\_to} address is incremented with the \texttt{\_value}. And the balance of the sender is decreased with the same value. The rest of the balances remains the same. This property should be checked after the execution of the \texttt{transfer} function. Using the correct syntax the annotation will look:
 \begin{lstlisting}[basicstyle=\ttfamily, breaklines=true ]
 //@ post 
@@ -234,7 +305,7 @@ The first property is that when a transfer function is executed the balance of t
 \end{lstlisting}
 Going over it line by line:
 \begin{enumerate}
-  \item Indicate that this is an annotation and not a comment. And this is of type post condition
+  \item Indicate that this is an annotation and not a comment. And this is of type post condition.
   \item Balance of \texttt{\_to} gets incremented by \texttt{\_value}
   \item Balance of \texttt{msg.sender} gets decremented by \texttt{\_value}
   \item Rest of the balances does not change.
