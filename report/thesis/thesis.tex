@@ -20,7 +20,6 @@
 \input{solidity-highlighting.tex}
 \lstset{escapeinside={<@}{@>}}
 
-
 \title{Runtime Verification of Smart Contracts \\
 \large On the Ethereum network \\}
 
@@ -42,19 +41,17 @@
 Section explains basics of solidity in order to understand the rest of the paper. Same section as in ResearchTopics
 
 \section{Tool Overview}
-\begin{itemize}
-  \item Tool works in two phases validation and generation.
-  \item Validation typechecks and checks if annotations are well formed according to grammar.
-  \item Generation generates original solidity code with extra added code to check annotations at runtime.
-  \item Approach uses a Solidity grammar that can be updated easily for future updates.
-  \item Output of validation phase can be used for other verification tools (result is a parse tree).
-  \item Annotations can be defined as invariants and pre or post conditions for functions.
-  \item Annotations use JML like syntax.
-  \item Tool can be used both during development (as extra test cases) or on the actual live blockchain (this probably costs a lot of extra gas = ether).
-\end{itemize}
-\begin{center}
-  \includegraphics[width=\textwidth,height=\textheight,keepaspectratio]{resources/ToolOverview.png}
-\end{center}
+% \begin{itemize}
+%   \item Tool works in two phases validation and generation.
+%   \item Validation typechecks and checks if annotations are well formed according to grammar.
+%   \item Generation generates original solidity code with extra added code to check annotations at runtime.
+%   \item Approach uses a Solidity grammar that can be updated easily for future updates.
+%   \item Output of validation phase can be used for other verification tools (result is a parse tree).
+%   \item Annotations can be defined as invariants and pre or post conditions for functions.
+%   \item Annotations use JML like syntax.
+%   \item Tool can be used both during development (as extra test cases) or on the actual live blockchain (this probably costs a lot of extra gas = ether).
+% \end{itemize}
+\includegraphics[width=\textwidth,height=\textheight,keepaspectratio]{resources/ToolOverview.eps} 
 In the picture the complete overview of the tool can be seen. Within the dashed square the implemented parts are visible. The arrows indicate the flow of the contract code throughout the program. \\
 First contract code has to be annotated according to a specified grammar. Section \ref{sec:annotationlanguage} explains the grammar in more detail and gives some example annotations. The tool ANTLR is used to generate code for the lexer and parser. The result of this step is a parse tree which can be used for later stages. \\
 The next step is type checking the annotations. This uses the parse tree to examine the annotations and check if they are valid. The type checking is done bottom up and works in two phases. The first phase collects all the relevant variables. This includes state variables and function definitions (function name, arguments and return values). The next phase uses this information to do the actual type checking of the annotations. This is explained in more detail in Section \ref{sec:typechecker}. \\
@@ -276,6 +273,82 @@ This is solved by using an iterable mapping \footnote{\url{https://github.com/sz
 \section{Tool Usage}
 The code of the tool is publicly available on the repository \url{https://github.com/LarsStegeman/EthereumRuntimeMonitoring}. Instructions on how to use the tool on other contracts can be seen in the README.
 
+\hypertarget{getting-started}{%
+\subsection{Getting Started}\label{getting-started}}
+
+\hypertarget{prerequisites}{%
+\subsubsection{Prerequisites}\label{prerequisites}}
+
+\begin{itemize}
+\item
+  Java 1.8
+\item
+  Maven 3.5.3
+\item
+  ANTLR 4 (Maven will get this automatically when installing)
+\end{itemize}
+
+\hypertarget{installing}{%
+\subsubsection{Installing}\label{installing}}
+
+To install this tool perform the following steps
+
+Clone this repository
+
+\begin{verbatim}
+git clone https://github.com/LarsStegeman/EthereumRuntimeMonitoring
+\end{verbatim}
+
+Build the tool using maven
+
+\begin{verbatim}
+mvn package
+\end{verbatim}
+
+Run the tool with basic example
+
+\begin{verbatim}
+mvn exec:java
+\end{verbatim}
+
+This should output the file \texttt{basicAnnotations\_generated.sol}.
+
+\hypertarget{using-the-tool}{%
+\subsection{Using the tool}\label{using-the-tool}}
+
+\hypertarget{grammar-examples}{%
+\subsubsection{Grammar examples}\label{grammar-examples}}
+
+For example annotations see Section \ref{sec:annotationlanguage}. The grammar for the annotation
+language can be found in the file
+\href{https://github.com/LarsStegeman/EthereumRuntimeMonitoring/blob/master/src/main/antlr4/SolidityAnnotated.g4}{SolidityAnnotation.g4}. More
+example annotations can be found in the \href{https://github.com/LarsStegeman/EthereumRuntimeMonitoring/tree/master/src/test/contracts}{test
+directory}.
+
+\hypertarget{run-the-tool-on-other-contracts}{%
+\subsubsection{Run the tool on other
+contracts}\label{run-the-tool-on-other-contracts}}
+
+When the tool is build, a jar file is also generated to use the tool on
+other contracts. The jar file is located in the \texttt{target}
+directory. Use the tool on other contracts using the command
+
+\begin{verbatim}
+java -jar .\target\Ethereum-RuntimeVerification-1.0.jar     <my-annotated-contract.sol>
+\end{verbatim}
+
+This will generate a file \texttt{my-annotated-contract\_generated.sol}
+
+\hypertarget{parameters}{%
+\subsubsection{Parameters}\label{parameters}}
+
+For debugging and testing the tool has two parameters which can be
+switched on. They can be found in
+\href{https://github.com/LarsStegeman/EthereumRuntimeMonitoring/blob/master/src/main/java/utils/Parameters.java}{Parameters.java}. The boolean
+\texttt{DEBUG} enables extra print statements to be printed while
+parsing. The boolean \texttt{STOPONERROR} makes it so that the tool does
+not stop on the first error it encounters.
+
 \section{Case study}
 % \begin{itemize}
 %   \item Take contract that has vulnerability and add annotations
@@ -291,7 +364,7 @@ It models a minimum viable token. To keep the state of the contract a \texttt{ma
 When the contract is created the constructor will be called. In this constructor the initialSupply is given as a parameter. All the initial supply is given to the contract creator (\texttt{msg.sender}). The totalSupply value is assigned and cannot be changed after initialization.\\
 Note that this contract is not ERC20 compliant. ERC20 is the interface that most tokens use to implement the desired functionality. This interface is defined in order for all wallets and exchanges to be able to handle different tokens \footnote{\url{https://github.com/ethereum/EIPs/blob/master/EIPS/eip-20.md}}. The main difference is that this contract does not have an \texttt{approve} mapping which lets users approve a certain transfer of tokens. Also this SimpleToken does not allow \texttt{minting} or \texttt{burning} of tokens, in other words the total supply is fixed. Below we can see the Solidity source code of the contract SimpleToken.
 
-\lstinputlisting[language=Solidity, tabsize = 2]{examples/SimpleToken.sol}
+\lstinputlisting[language=Solidity, breaklines= true, tabsize = 2, literate={\ \ }{{\ }}1]{examples/SimpleToken.sol}
 
 \subsubsection{Annotation}
 The above section describes the implementation of the token contract. However there is also a specification given in words as to what the contract should do. A few properties of this specification can be declared explicitly using pre and post-conditions or invariants. These properties are important to the functionality of the contract. 
@@ -315,14 +388,14 @@ Going over it line by line:
 \subsubsection{Generated Code}
 When the tool gets executed with the above contract as input including the annotation, the tool will parse the annotation and output generated solidity code with extra checks. 
 The complete generated code can be seen below.
-\lstinputlisting[language=Solidity, tabsize = 2, literate={\ \ }{{\ }}1]{examples/SimpleToken_generated.sol}
+\lstinputlisting[language=Solidity, breaklines= true, tabsize = 2, literate={\ \ }{{\ }}1]{examples/SimpleToken_generated.sol}
 
 Note that the functionality of this contract is exactly the same as the previous code but with extra checks. This means that this approach is only feasible for development purposes. Since the gas cost of executing the previous contract is much lower then that of the runtime monitored contract. Also the more addresses that get added to the iterable map the more gas the transaction will consume.
 
 
 \subsection{Vulnerable Contract}
 The next example is a simple contract with a vulnerability. The vulnerability will not be easily visible when reading the contract, but with extra annotations added this is visible. This contract is not actually in use but is based on a CryptoRoulette contract \footnote{https://github.com/misterch0c/Solidlity-Vulnerable/blob/master/honeypots/CryptoRoulette.sol}. Most of the contract code is omitted for this example. The idea is that the contract keeps a list of messages, for each message the sender and the message are saved. Only the address \texttt{admin} has extra privileges to possibly delete messages or delete the contract (these functions are not in the snippet).
-\lstinputlisting[language=Solidity, tabsize = 2, literate={\ \ }{{\ }}1]{examples/VulnerableContract.sol}
+\lstinputlisting[language=Solidity, breaklines= true, tabsize = 2, literate={\ \ }{{\ }}1]{examples/VulnerableContract.sol}
 
 \subsubsection{Annotation}
 The annotation that is added to the function \texttt{logMessage} checks the basic behaviour of the function. The address \texttt{admin} should not be changed, and the number of messages should be increased by one. This should be checked after the function is executed.
@@ -331,7 +404,7 @@ The annotation that is added to the function \texttt{logMessage} checks the basi
 \end{lstlisting}
 \subsubsection{Generated Code}
 The code that is generated stores the original variables in memory before calling the function body. After the function is executed the old variables will be compared to the current state variables. Every call to the function \texttt{logMessage} will report an error since each time the state variables \texttt{admin} and \texttt{nrOfMessages} are changed. These are changed because the struct \texttt{message} within the function body defaults to \texttt{storage}. 
-\lstinputlisting[language=Solidity, tabsize = 2, literate={\ \ }{{\ }}1]{examples/VulnerableContract_generated.sol}
+\lstinputlisting[language=Solidity, breaklines= true, tabsize = 2, literate={\ \ }{{\ }}1]{examples/VulnerableContract_generated.sol}
 
 \section{Future work}
 \begin{itemize}
@@ -345,4 +418,6 @@ The code that is generated stores the original variables in memory before callin
   \item 
 \end{itemize}
 
+\bibliographystyle{IEEEtran}
+\bibliography{IEEEfull,references}
 \end{document}
