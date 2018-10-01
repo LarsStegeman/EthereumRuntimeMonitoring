@@ -21,4 +21,8 @@ contract Examples {
     function changeSomething() public{
         // ...
     }
+
+    mapping(address => uint256) myMap;
+    address public adr;
+    //@ inv myMap[adr] == 5
 }

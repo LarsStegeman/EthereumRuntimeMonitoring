@@ -372,17 +372,17 @@ public class SolidityAnnotatedParser extends Parser {
 		public PrimaryAnnotationExpressionContext primaryAnnotationExpression() {
 			return getRuleContext(PrimaryAnnotationExpressionContext.class,0);
 		}
+		public IntegerOpIntegerContext integerOpInteger() {
+			return getRuleContext(IntegerOpIntegerContext.class,0);
+		}
+		public IntegerOpBooleanContext integerOpBoolean() {
+			return getRuleContext(IntegerOpBooleanContext.class,0);
+		}
 		public CompareOpContext compareOp() {
 			return getRuleContext(CompareOpContext.class,0);
 		}
 		public BooleanOpContext booleanOp() {
 			return getRuleContext(BooleanOpContext.class,0);
-		}
-		public IntegerOpBooleanContext integerOpBoolean() {
-			return getRuleContext(IntegerOpBooleanContext.class,0);
-		}
-		public IntegerOpIntegerContext integerOpInteger() {
-			return getRuleContext(IntegerOpIntegerContext.class,0);
 		}
 		public AnnotationExpressionContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
@@ -437,7 +437,7 @@ public class SolidityAnnotatedParser extends Parser {
 				setState(200);
 				match(T__2);
 				setState(201);
-				annotationExpression(3);
+				annotationExpression(7);
 				}
 				break;
 			case 3:
@@ -492,11 +492,11 @@ public class SolidityAnnotatedParser extends Parser {
 						_localctx = new AnnotationExpressionContext(_parentctx, _parentState);
 						pushNewRecursionContext(_localctx, _startState, RULE_annotationExpression);
 						setState(214);
-						if (!(precpred(_ctx, 7))) throw new FailedPredicateException(this, "precpred(_ctx, 7)");
+						if (!(precpred(_ctx, 5))) throw new FailedPredicateException(this, "precpred(_ctx, 5)");
 						setState(215);
-						compareOp();
+						integerOpInteger();
 						setState(216);
-						annotationExpression(8);
+						annotationExpression(6);
 						}
 						break;
 					case 2:
@@ -504,11 +504,11 @@ public class SolidityAnnotatedParser extends Parser {
 						_localctx = new AnnotationExpressionContext(_parentctx, _parentState);
 						pushNewRecursionContext(_localctx, _startState, RULE_annotationExpression);
 						setState(218);
-						if (!(precpred(_ctx, 6))) throw new FailedPredicateException(this, "precpred(_ctx, 6)");
+						if (!(precpred(_ctx, 4))) throw new FailedPredicateException(this, "precpred(_ctx, 4)");
 						setState(219);
-						booleanOp();
+						integerOpBoolean();
 						setState(220);
-						annotationExpression(7);
+						annotationExpression(5);
 						}
 						break;
 					case 3:
@@ -516,11 +516,11 @@ public class SolidityAnnotatedParser extends Parser {
 						_localctx = new AnnotationExpressionContext(_parentctx, _parentState);
 						pushNewRecursionContext(_localctx, _startState, RULE_annotationExpression);
 						setState(222);
-						if (!(precpred(_ctx, 5))) throw new FailedPredicateException(this, "precpred(_ctx, 5)");
+						if (!(precpred(_ctx, 3))) throw new FailedPredicateException(this, "precpred(_ctx, 3)");
 						setState(223);
-						integerOpBoolean();
+						compareOp();
 						setState(224);
-						annotationExpression(6);
+						annotationExpression(4);
 						}
 						break;
 					case 4:
@@ -528,11 +528,11 @@ public class SolidityAnnotatedParser extends Parser {
 						_localctx = new AnnotationExpressionContext(_parentctx, _parentState);
 						pushNewRecursionContext(_localctx, _startState, RULE_annotationExpression);
 						setState(226);
-						if (!(precpred(_ctx, 4))) throw new FailedPredicateException(this, "precpred(_ctx, 4)");
+						if (!(precpred(_ctx, 2))) throw new FailedPredicateException(this, "precpred(_ctx, 2)");
 						setState(227);
-						integerOpInteger();
+						booleanOp();
 						setState(228);
-						annotationExpression(5);
+						annotationExpression(3);
 						}
 						break;
 					}
@@ -7359,13 +7359,13 @@ public class SolidityAnnotatedParser extends Parser {
 	private boolean annotationExpression_sempred(AnnotationExpressionContext _localctx, int predIndex) {
 		switch (predIndex) {
 		case 0:
-			return precpred(_ctx, 7);
-		case 1:
-			return precpred(_ctx, 6);
-		case 2:
 			return precpred(_ctx, 5);
-		case 3:
+		case 1:
 			return precpred(_ctx, 4);
+		case 2:
+			return precpred(_ctx, 3);
+		case 3:
+			return precpred(_ctx, 2);
 		}
 		return true;
 	}
@@ -7529,15 +7529,15 @@ public class SolidityAnnotatedParser extends Parser {
 		"\u00be\3\2\2\2\u00c0\3\3\2\2\2\u00c1\u00c2\7`\2\2\u00c2\u00c3\7a\2\2\u00c3"+
 		"\u00c4\5\6\4\2\u00c4\5\3\2\2\2\u00c5\u00c6\b\4\1\2\u00c6\u00c7\7\3\2\2"+
 		"\u00c7\u00c8\5\6\4\2\u00c8\u00c9\7\4\2\2\u00c9\u00d7\3\2\2\2\u00ca\u00cb"+
-		"\7\5\2\2\u00cb\u00d7\5\6\4\5\u00cc\u00cd\t\2\2\2\u00cd\u00ce\7\3\2\2\u00ce"+
+		"\7\5\2\2\u00cb\u00d7\5\6\4\t\u00cc\u00cd\t\2\2\2\u00cd\u00ce\7\3\2\2\u00ce"+
 		"\u00cf\5\u00b4[\2\u00cf\u00d0\7\b\2\2\u00d0\u00d1\5\u00b4[\2\u00d1\u00d2"+
 		"\7\t\2\2\u00d2\u00d3\5\6\4\2\u00d3\u00d4\7\4\2\2\u00d4\u00d7\3\2\2\2\u00d5"+
 		"\u00d7\5\b\5\2\u00d6\u00c5\3\2\2\2\u00d6\u00ca\3\2\2\2\u00d6\u00cc\3\2"+
-		"\2\2\u00d6\u00d5\3\2\2\2\u00d7\u00ea\3\2\2\2\u00d8\u00d9\f\t\2\2\u00d9"+
-		"\u00da\5\f\7\2\u00da\u00db\5\6\4\n\u00db\u00e9\3\2\2\2\u00dc\u00dd\f\b"+
-		"\2\2\u00dd\u00de\5\n\6\2\u00de\u00df\5\6\4\t\u00df\u00e9\3\2\2\2\u00e0"+
-		"\u00e1\f\7\2\2\u00e1\u00e2\5\16\b\2\u00e2\u00e3\5\6\4\b\u00e3\u00e9\3"+
-		"\2\2\2\u00e4\u00e5\f\6\2\2\u00e5\u00e6\5\20\t\2\u00e6\u00e7\5\6\4\7\u00e7"+
+		"\2\2\u00d6\u00d5\3\2\2\2\u00d7\u00ea\3\2\2\2\u00d8\u00d9\f\7\2\2\u00d9"+
+		"\u00da\5\20\t\2\u00da\u00db\5\6\4\b\u00db\u00e9\3\2\2\2\u00dc\u00dd\f"+
+		"\6\2\2\u00dd\u00de\5\16\b\2\u00de\u00df\5\6\4\7\u00df\u00e9\3\2\2\2\u00e0"+
+		"\u00e1\f\5\2\2\u00e1\u00e2\5\f\7\2\u00e2\u00e3\5\6\4\6\u00e3\u00e9\3\2"+
+		"\2\2\u00e4\u00e5\f\4\2\2\u00e5\u00e6\5\n\6\2\u00e6\u00e7\5\6\4\5\u00e7"+
 		"\u00e9\3\2\2\2\u00e8\u00d8\3\2\2\2\u00e8\u00dc\3\2\2\2\u00e8\u00e0\3\2"+
 		"\2\2\u00e8\u00e4\3\2\2\2\u00e9\u00ec\3\2\2\2\u00ea\u00e8\3\2\2\2\u00ea"+
 		"\u00eb\3\2\2\2\u00eb\7\3\2\2\2\u00ec\u00ea\3\2\2\2\u00ed\u00ee\b\5\1\2"+

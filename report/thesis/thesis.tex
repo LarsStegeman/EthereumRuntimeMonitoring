@@ -64,7 +64,7 @@ The output of the type checker phase can also be used for static analysis tools.
 The first step towards implementing the tool is to define an annotation syntax, and formally write this down using a grammar. The parser generator that is used is called ANTLR \cite{parr2013definitive}. Using the grammar definition the lexer and parser will be automatically generated. The output of this phase is a parse tree that can be used in later stages of the tool.
 
 \subsection{Grammar definition}
-There already exists a grammar for the complete Solidity language \cite{antlroriginalgrammar}. This grammar is expressed in the language that is used by ANTLR tool. ANTLR has the capabilities to extend certain grammars. This is done by inheritance over the original grammar. This principle is explained in detail here \footnote{\url{https://github.com/antlr/antlr4/blob/master/doc/grammars.md}}. It functions much like object oriented inheritance. The main grammar inherits all rules, token specifications and named actions from the imported grammar. Rules in the main grammar override rules in the imported grammar. We will use this principle to extend the grammar of Solidity to recognize the special annotations that will later be used in the tool. In this case the imported grammar is the original Solidity grammar. The 'new' main grammar is defined further below and is called SolidityAnnotated.\par
+There already exists a grammar for the complete Solidity language \cite{antlroriginalgrammar}. This grammar is expressed in the language that is used by ANTLR tool. ANTLR has the capabilities to extend certain grammars. This is done by inheritance over the original grammar. This principle is explained in detail here \footnote{\url{https://github.com/antlr/antlr4/blob/master/doc/grammars.md}}. It functions much like object oriented inheritance. The main grammar inherits all rules, token specifications and named actions from the imported grammar. Rules in the main grammar override rules in the imported grammar. We will use this principle to extend the grammar of Solidity to recognize the special annotations that will later be used in the tool. In this case the imported grammar is the original Solidity grammar. The 'new' main grammar is defined further below and is called SolidityAnnotated. The advantage of this approach is that changes to the original Solidity grammar can easily be updated in the tool. This only holds for small changes to the language, if grammar rules that the tool makes use of the SolidityAnnotated grammar also has to be updated.\par
 The annotations have certain requirements that can be summarized the following way. Later each requirement is discussed in detail.
 \begin{itemize}
     \item Annotations can be specified at the top level of the contract.
@@ -99,13 +99,13 @@ contractPart
     | eventDefinition
     | enumDefinition ;
 \end{lstlisting}
-In the original grammar the definition of \texttt{contractPart} is what defines the declaration of variables and the definitions for structs and functions. This is where the extra annotations have to be added to the grammar. The snippet below shows the basic definition of an annotation. This is not the complete grammar some of the tokens are omitted from this snippet, since they are not required to understand the grammar definition.
+In the original grammar the definition of \texttt{contractPart} is what defines the declaration of variables and the definitions for structs and functions. This is where the extra annotations have to be added to the grammar. The snippet below shows the basic definition of an annotation. This is not the complete grammar: some of the tokens are omitted from this snippet, since they are not required to understand the grammar definition.
 \begin{lstlisting}[basicstyle=\ttfamily, breaklines=true]
 grammar SolidityAnnotated;
 import Solidity;
 
 @header {package generated;}
-  
+
 //Added annotationDefinition. This enables annotations to be on the top level only.
 contractPart
   : stateVariableDeclaration
@@ -116,26 +116,25 @@ contractPart
   | functionDefinition
   | eventDefinition
   | enumDefinition 
-  | annotationDefinition ;
+  <@\textcolor{red}{  | annotationDefinition ;}@>
 
 annotationDefinition
   : AnnotationStart AnnotationKind annotationExpression;
 
-// Same as the expression rule except it does not include changes, only comparisons
-// Added '->' for then.
+// Same as the expression rule except it does not include assignments, only comparisons
 annotationExpression
   : '(' annotationExpression ')'
-  | annotationExpression compareOp annotationExpression
-  | annotationExpression booleanOp annotationExpression
-  | annotationExpression integerOpBoolean annotationExpression
-  | annotationExpression integerOpInteger annotationExpression
   | '!'annotationExpression
   | ('\\forall' | '\\exists') '(' identifier 'in' identifier ':' annotationExpression')'
+  | annotationExpression integerOpInteger annotationExpression
+  | annotationExpression integerOpBoolean annotationExpression
+  | annotationExpression compareOp annotationExpression
+  | annotationExpression booleanOp annotationExpression
   | primaryAnnotationExpression;
 
 primaryAnnotationExpression
-  : primaryExpression 
-  | primaryAnnotationExpression '.' identifier
+  <@\textcolor{red}{: primaryExpression}@> 
+  | primaryAnnotationExpression '.' <@\textcolor{red}{identifier}@> 
   | primaryAnnotationExpression '[' primaryAnnotationExpression ']'
   | '\\old' '(' primaryAnnotationExpression ')';
 
@@ -146,6 +145,19 @@ AnnotationStart
 AnnotationKind
   : 'inv'| 'pre'| 'post';
 
+// Added '->' for then.
+booleanOp
+  : '&&' | '||' | '->';
+
+compareOp
+  : '==' | '!=';
+
+integerOpBoolean
+  : ('>'|'>='|'<'|'<=');
+
+integerOpInteger
+  : '+' | '-';
+
 // Remove '@' from first position of LINE_COMMENT token. 
 LINE_COMMENT 
   : '//' ~[@] ~[\r\n]* -> channel(HIDDEN);
@@ -154,8 +166,9 @@ WS
   : [ \t\r\n\u000C]+ -> channel(HIDDEN);
 \end{lstlisting}
 An AnnotationDefinition is composed of multiple components. It has a \texttt{AnnotationStart}, \texttt{AnnotationKind} and \texttt{annotationExpression} component. The \texttt{AnnotationStart} token is used to signal that an annotation definition is coming next. This is defined as '//@' making it a line comment to other solidity compilers. This makes annotated solidity code still compilable by normal Solidity compilers. For the grammar to accept this notation the \texttt{LINE\_COMMENT} token has to be adjusted to not accept '@' as a second character. Otherwise all annotation comments would be recognized as a \texttt{LINE\_COMMENT} making it unusable. \par
-There are two types of annotations they are defined by the token \texttt{AnnotationKind}. They can either be a invariant or a pre- or post-condition of a function. Each annotation has an expression which has to be evaluated called \texttt{annotationExpression}. The expression parser rules are separated between \texttt{annotationExpression} and \texttt{primaryAnnotationExpression}. This is needed to keep the hierarchy in parsing and prevent using primary definitions within complex expressions. For example using the keyword '\textbackslash old' before parenthesis. \par
-The annotation expressions use a different parser rules than the expression rules that are used within the original Solidity grammar. The \texttt{annotationExpression} does not allow syntax like \texttt{expression + '++'} and to distinguish these a new parser rule was introduced for annotations only. \texttt{primaryExpression} and \texttt{identifier} are parser rules that are defined in the original Solidity grammar. The annotation expressions make use of these rules so that they do not have to be defined again.
+There are three types of annotations that are defined by the token \texttt{AnnotationKind}. They can either be an invariant or a pre- or post-condition of a function. Invariants are defined per contract, and should hold at any point during the execution of the contract. Pre- or post-conditions are defined for a specific method. They are checked before and after execution of the method. Each annotation has an expression which has to be evaluated called \texttt{annotationExpression}. The expression parser rules are separated between \texttt{annotationExpression} and \texttt{primaryAnnotationExpression}. This is needed to keep the hierarchy in parsing and prevent using complex expressions within primary definitions. For example using the keyword '\textbackslash old' before parenthesis. The annotation expressions use a different parser rules than the expression rules that are used within the original Solidity grammar. The \texttt{annotationExpression} does not allow syntax like \texttt{expression + '++'} and to distinguish these a new parser rule was introduced for annotations only. \par
+The order in which the different subrules are defined in the \texttt{annotationExpression} is imported. The order indicates the priority which the subrules are given. This means that parenthesis bind stronger then any other rule, this is followed by \texttt{!} and so on. The \texttt{annotationExpression} construction contains all the logical comparators that can be used within annotations. In general they are of the form \texttt{expression - <operand> - expression}. The expression are defined recursively thus making it able to form longer expressions with multiple operands. The parser rules in \texttt{primaryAnnotationExpression} are used as leaves in the expression. \texttt{primaryExpression} reverts to different kinds of literals that are used in Solidity. The other rules deal with complex types of Solidity and the possibility to reference an old variable.  
+\texttt{primaryExpression} and \texttt{identifier} are parser rules that are defined in the original Solidity grammar. The annotation expressions make use of these rules so that they do not have to be defined again. These rules do not include assignments and are without side effects. The \texttt{primaryExpression} parser rule includes all the literals that can be used within Solidity. The parser rule \texttt{identifier} is used for all kinds of identifiers such as function identifiers and variable identifiers. Function calls are not allowed within annotations, for more details see Section \ref{sec:limitations}.
 
 \subsection{Examples}
 In this section a couple of annotation examples will be given for example contracts. First a contract snippet is shown and later the meaning of this annotation is explained.
@@ -167,11 +180,18 @@ Defines a post condition on the function \texttt{doSomething()}. Checks if the o
 Defines an invariant that will check if all elements in array \texttt{a} are positive.
 \lstinputlisting[language=Solidity, linerange={19-23}]{examples/BasicAnnotations.sol}
 Postcondition for the function \texttt{changeSomething()}. If the sender of this transaction is equal to the owner (\texttt{msg.sender}), variable \texttt{b} must be different from the start of the function. 
+\lstinputlisting[language=Solidity, linerange={25-27}]{examples/BasicAnnotations.sol}
+Example of a mapping that maps \texttt{address} to \texttt{uint256}. The invariant checks the key \texttt{adr} in the map and checks if it is equal to 5. \\\\
+A few example of expressions that do not parse correctly:
+\lstinputlisting[language=Solidity, linerange={4-9}]{examples/ParseError.sol}
+Functions are not recognized in annotations. This is because some functions could have side effects. This can be checked in typechecker but is not implemented yet.
+\lstinputlisting[language=Solidity, linerange={11-14}]{examples/ParseError.sol}
+The construction \texttt{\textbackslash old()} can only reference primary expression and not complex expressions.
 
 \section{Type Checker}
 \label{sec:typechecker}
 \subsection{Design}
-Annotations have to be validated on certain aspects for them to be correct and usable. These aspects have to be verified first for the annotations to be useful in the next generation phase. The parser ensures annotations are syntactically correct however there are more properties that have to be checked. The typecheck phase will consist of two passes that walk the complete parse tree. The first walk will collect all the variables and defined structures and store these in an information object. The second walk will type check each annotation individually. During this type checking the type of each identifier is looked up using the collected information from the first walk. 
+Annotations have to be validated on certain aspects for them to be meaningful. These aspects have to be verified first for the annotations to be useful in the next generation phase. The parser ensures annotations are syntactically correct however there are more properties that have to be checked. The typecheck phase will consist of two passes that walk the complete parse tree. The first walk will collect all the variables and defined structures and store these in an information object. The second walk will type check each annotation individually. During this type checking the type of each identifier is looked up using the collected information from the first walk. 
 \subsection{Implementation}
 During the first phase all the variables, structs and function definitions are stored in an object. This object is later used by the second phase to retrieve information.
 \begin{lstlisting}[breaklines=true, language=Java ]
@@ -184,7 +204,7 @@ public class ValidationInformation {
 }
 \end{lstlisting}
 \begin{itemize}
-  \item SolidityVariable is an object which has a name (the identifier) and a type. These resemble state variables in a contract.
+  \item SolidityVariable is an object which has a name (the identifier) and a type. These model state variables in a contract.
   \item SolidityFunction is an object which represent a function and stores the name and arguments. The arguments are of type SolidityVariable.
   \item SoldityStruct is an object that represent struct definitions in a solidity contract. It stores the name and elements. Elements are again of type SolidityVariable.
 \end{itemize}
@@ -269,6 +289,7 @@ This is solved by using an iterable mapping \footnote{\url{https://github.com/sz
 \end{itemize}
 
 \section{Limitations}
+\label{sec:limitations}
 % mappings, contract inheritance, scoping, /result 
 
 \section{Tool Usage}

@@ -3,7 +3,6 @@ import Solidity;
 
 @header {package generated;}
 
-
 //Added annotationDefinition. This enables annotations to be on the top level only.
 contractPart
   : stateVariableDeclaration
@@ -19,16 +18,15 @@ contractPart
 annotationDefinition
   : AnnotationStart AnnotationKind annotationExpression;
 
-// Same as the expression rule except it does not include changes, only comparisons
-// Added '->' for then.
+// Same as the expression rule except it does not include assignments, only comparisons
 annotationExpression
   : '(' annotationExpression ')'
-  | annotationExpression compareOp annotationExpression
-  | annotationExpression booleanOp annotationExpression
-  | annotationExpression integerOpBoolean annotationExpression
-  | annotationExpression integerOpInteger annotationExpression
   | '!'annotationExpression
   | ('\\forall' | '\\exists') '(' identifier 'in' identifier ':' annotationExpression')'
+  | annotationExpression integerOpInteger annotationExpression
+  | annotationExpression integerOpBoolean annotationExpression
+  | annotationExpression compareOp annotationExpression
+  | annotationExpression booleanOp annotationExpression
   | primaryAnnotationExpression;
 
 primaryAnnotationExpression
@@ -44,6 +42,7 @@ AnnotationStart
 AnnotationKind
   : 'inv'| 'pre'| 'post';
 
+// Added '->' for then.
 booleanOp
   : '&&' | '||' | '->';
 
@@ -55,8 +54,6 @@ integerOpBoolean
 
 integerOpInteger
   : '+' | '-';
-
-
 
 // Remove '@' from first position of LINE_COMMENT token. 
 LINE_COMMENT 
