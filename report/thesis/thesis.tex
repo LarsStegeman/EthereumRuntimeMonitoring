@@ -181,7 +181,7 @@ Defines an invariant that will check if all elements in array \texttt{a} are pos
 \lstinputlisting[language=Solidity, linerange={19-23}]{examples/BasicAnnotations.sol}
 Postcondition for the function \texttt{changeSomething()}. If the sender of this transaction is equal to the owner (\texttt{msg.sender}), variable \texttt{b} must be different from the start of the function. 
 \lstinputlisting[language=Solidity, linerange={25-27}]{examples/BasicAnnotations.sol}
-Example of a mapping that maps \texttt{address} to \texttt{uint256}. The invariant checks the key \texttt{adr} in the map and checks if it is equal to 5. \\\\
+Example of a mapping that maps \texttt{address} to \texttt{uint256}. The invariant checks the key \texttt{adr} in the map and checks if it is equal to 5. \hfill\\
 A few example of expressions that do not parse correctly:
 \lstinputlisting[language=Solidity, linerange={4-9}]{examples/ParseError.sol}
 Functions are not recognized in annotations. This is because some functions could have side effects. This can be checked in typechecker but is not implemented yet.
@@ -208,8 +208,28 @@ public class ValidationInformation {
   \item SolidityFunction is an object which represent a function and stores the name and arguments. The arguments are of type SolidityVariable.
   \item SoldityStruct is an object that represent struct definitions in a solidity contract. It stores the name and elements. Elements are again of type SolidityVariable.
 \end{itemize}
-Solidity has many types and to make generation and typechecking easier the types are reduced to 8 base types (\texttt{uint256, uint128} etc are all regarded as \texttt{INTEGER}). These are all represented in the enumeration \texttt{SolidityType}, and all the internal representation of contract code make use of it. \par
-The next phase will only parse the annotation part of the contract code, this means that no original solidity contract code will be reached. This is where the actual typechecking happens. It works bottom up, getting the type of each identifier and verifies the types of each step. The top level of each annotation should result in the type \texttt{BOOLEAN}. An extra type \texttt{UNDEFINED} was added to the SolidityType object to deal with cases where the identifier was not found and to produce a result without crashing the program. \par
+Solidity has many types and to make generation and typechecking easier the types are reduced to 8 base types (\texttt{uint256, uint128} etc are all regarded as \texttt{INTEGER}). These are all represented in the enumeration \texttt{SolidityType}, and all the internal representation of contract code make use of it. The internal representations must deal with nested constructions. For example consider the following solidity code:
+\begin{lstlisting}[breaklines=true, language=Solidity ]
+struct A{
+    B b;
+}
+struct B {
+    uint256 nr;
+}
+A var1;
+\end{lstlisting}
+For this Solidity code the typechecker would create two \texttt{SolidityStruct} objects, \texttt{A} and \texttt{B}. Struct \texttt{B} contains a variable texttt{nr} of type \texttt{INTEGER}, struct \texttt{A} contains a variable \texttt{b} of type \texttt{STRUCT} with reference to \texttt{B}. There also is a global variable \texttt{var1} with type \texttt{STRUCT} with reference to \texttt{A}. \par
+The next phase will only parse the annotation part of the contract code, this means that no original solidity contract code will be reached. This is where the actual typechecking happens. It works bottom up, getting the type of each identifier and verifies the types of each step. The top level of each annotation should result in the type \texttt{BOOLEAN}. An extra type \texttt{UNDEFINED} was added to the SolidityType object to deal with cases where the identifier was not found and to produce a result without crashing the program. For the rest of the parse rules/operators the following type system is used:
+\begin{itemize}
+  \item Base case: expression is a \texttt{primaryAnnotationExpression}. This could mean a identifier where the type is found through the \texttt{SolidityVariable} or a literal of some type. The type can just be passed on to the higher level.
+  \item '!' \texttt{expression}: Type checker verifies the nested expression and validates this results in \texttt{BOOLEAN}. Result of this step is always \texttt{BOOLEAN}.
+  \item \textbackslash forall | exists( identifier  in identifier: expression): There are multiple things that have to be verified. First the second \texttt{identifier} should be of type \texttt{MAPPING} or \texttt{ARRAY}. Secondly the nested expression is typechecked, this is within a special scope since expressions can make use of the first identifier. This expression should result in \texttt{BOOLEAN}. This result is also returned for the higher level expression.
+  \item \texttt{expression} ('+' | '-') \texttt{expression}:Both subexpressions should return \texttt{INTEGER}. Result of the current expression is \texttt{INTEGER} aswell.
+  \item \texttt{expression} ('>'|'>='|'<'|'<=') \texttt{expression}: Both sub-expressions should return \texttt{INTEGER}. Result of the current expression is \texttt{BOOLEAN}.
+  \item \texttt{expression} ('==' | '!=') \texttt{expression}: The types of the sub-expressions should match. The result of this is \texttt{BOOLEAN}.
+  \item \texttt{expression} ('\&\&' | '||' | '->') \texttt{expression}: Both sub-expressions should return \texttt{BOOLEAN}. Result of this is \texttt{BOOLEAN} aswell.
+\end{itemize}
+If any of the types do not correspond to the expected value a validation error is reported and logged. \par
 In case complex types are used such as structs the additional information is retrieved from the corresponding object that is referenced. For example consider a identifier \texttt{a.b}. This would mean that the type of \texttt{a} must be a struct and that in the definition of the struct the type of the identifier \texttt{b} must be retrieved. Additionally annotations can make use of function arguments and reference them. This is solved by looking up the \texttt{SolidityFunction} object that the annotation was declared above. This makes it possible to retrieve the types of function arguments and use them within the annotation.
 
 \section{Generation}
@@ -220,12 +240,46 @@ In case complex types are used such as structs the additional information is ret
 %     \item Implementation of generation is using a TokenStreamRewriter (with whitespace) and an abstract parse tree (only tokens that are in grammar). Tokens in both structures know the position, this way the original solidity code can be printed and extra code can be added through traversing the parse tree.
 % \end{itemize}
 \subsection{Design}
-The next step in the tool process is the generation phase. In this phase new code will be generated and added to the original contract. Requirements are that the interface of the contract does not change. The functional behaviour of the contract should remain the same and the added code only performs extra checks. For each added annotation three steps have to be performed:
+The next step in the tool process is the generation phase. In this phase new code will be generated and added to the original contract. Requirements are that the interface of the contract does not change. Therefore we will warp the original function in a new function which calls the original function. The functional behaviour of the contract should remain the same and the added code only performs extra checks. For each added annotation three steps have to be performed:
 \begin{enumerate}
-  \item Generate a function for each annotation that checks the expression. This function should have the correct number of arguments that are used within the annotation. Arguments are variables that are not reachable from the global scope and used in the expression. These are \texttt{old} variables and function variables.
-  \item For each original function of the contract: Create a wrapper function which calls the original function body.
-  \item Add all annotations that should be checked to the wrapper function. All variables that should be stored before the function call should be stored in memory before executing the function body. 
+  \item Generate a function for each annotation that checks the expression. This function should have the correct number of arguments that are used within the annotation. Arguments are variables that are not reachable from the global scope and used in the expression. These are \texttt{old} variables and function variables. The only variables that are available within a function with no arguments are the global defined variables. These do not have to be given as an argument since then you have two variables defined with the same name. Other variables have to be given as an argument to the function. This includes function arguments, these are arguments that the original function has where this annotation is defined for. This is empty by construction for invariants since they do not reference a function. Additionally pre- and postconditions can use the \textbackslash old() on a variable. This means the value of the variable before the function execution, and this has also to be given as an argument to the annotation function.
+  \item For each original function of the contract: Create a wrapper function with the old name which calls the original function body.
+  \item Add all annotations that should be checked to the wrapper function. All variables that should be stored before the function call should be stored in memory before executing the function body. This means that all variables that are reference in an annotation with the keyword \textbackslash old() have to be stored in a variable with name 'variable + \_old'.
 \end{enumerate}
+To illustrate the steps consider this small example:
+\begin{lstlisting}[breaklines=true, language=Solidity ]
+//@ inv 'invariant_expression'
+
+//@ post 'post_expression'
+function testFunction() public{
+    //...
+}
+\end{lstlisting}
+At the end of the generation phase this will be the generated code:
+\begin{lstlisting}[breaklines=true, language=Solidity ]
+//@ inv 'invariant_expression'
+function annotation0(){
+  //check 'invariant_expression'
+}
+
+//@ post 'post_expression'
+funtion annotation1('argument'){
+  // check 'post_expression'
+}
+
+function testFunction() public{
+  //stored variables in memory, i.e. copy all variables in 'argument'
+  annotation0();
+  testFunction_body();
+  annotation1('argument');
+  annotation0();
+}
+
+function testFunction_body() private{
+    //...
+}
+\end{lstlisting}
+
 \subsection{Implementation}
 During the typechecking phase the object \texttt{AnnotationInformation} is created for each annotation it parses. This object contains the following information:
 \begin{lstlisting}[breaklines=true, language=Java ]
@@ -241,23 +295,23 @@ public class AnnotationInformation{
 \end{lstlisting}
 \begin{itemize}
   \item Reference to the node in the parser tree.
-  \item A unique name for the annotation.
-  \item A list of arguments used in the function. The boolean indicates if it should be included as an argument for the function.
+  \item A unique name for the annotation. This name is generated and is 'annotation' + a number.
+  \item A list of arguments used in the method. The boolean indicates if it should be included as an argument for the method. As explained in the Design section. These are all arguments that cannot be reached from the global scope.
   \item Type of the annotation. Invariant, Pre or Post-condition. This indicates where it should be added to the wrapper function.
   \item Function the annotation is declared above. Null in case this is an invariant.
 \end{itemize}
-When parsing the tree the correct \texttt{AnnotationInformation} object is retrieved using the parse tree node. The function declaration is constructed using the name and arguments from this object. The body of this function can be constructed from the \texttt{expression} that is within the parse tree object. In most of the cases the code can directly printed but in some the expression has to be altered:
+When parsing the tree the correct \texttt{AnnotationInformation} object is retrieved using the parse tree node. The function declaration is constructed using the name and arguments from this object. The body of this function can be constructed from the \texttt{expression} that is within the parse tree object. In most of the cases the code can directly be printed but in some cases the expression has to be altered:
 \begin{itemize}
   \item The expressions \texttt{\textbackslash forall} and \texttt{\textbackslash exists} have to be replaced with a loop, that checks the expression for all the elements of the collection. 
-  \item The usage of \texttt{\textbackslash old} has to be replaced with the variable that was created before the function execution. This means rewriting the variable \texttt{\textbackslash old(identifier)} to \texttt{identifier\_old}. In case of structs this is a bit more works since \texttt{\textbackslash old(a.b)} should be replaced with \texttt{a\_old.b}.
+  \item The usage of \texttt{\textbackslash old} has to be replaced with the variable that was created and initialized before the function execution. This means rewriting the variable \texttt{\textbackslash old(identifier)} to \texttt{identifier\_old}. In case of structs this is a bit more works since \texttt{\textbackslash old(a.b)} should be replaced with \texttt{a\_old.b}.
   \item Boolean operator \texttt{a->b} which can be used in annotations is not valid Solidiy code, and has to be replaced with \texttt{!a||b}
 \end{itemize}
-Since the annotations are type checked the generated code will always be valid. The result is always a boolean value. The actual testing of this value is done using an \texttt{assert} statement. If the value is false it means that the transaction will be reverted and all gas will be consumed. This could be changed to for example an \texttt{event}.\par
+Since the annotations are type checked the generated code will always be valid. The result is always a boolean value. The actual testing of this value is done using an \texttt{assert} statement. If the value is false it means that the transaction will be reverted and all gas will be consumed. This could be changed to for example an \texttt{event}. The difference in approach is important. Assert will revert the entire transaction. A possible vulnerability that triggers the assertion will not go through as the assertion stops the execution. The vulnerability can not be exploited. In the case of changing this to an \texttt{event} the vulnerability can be exploited, but it will be registered because of the emitted event. Other behaviour can be specified here, for example calling a function that halts all the functionality of a contract except for a special function that only the admin of the contract can execute.\par
 When the parser encounters a function it will check if annotations have to be added. This means searching through all \texttt{AnnotationInformation} objects and see if any of them reference the current function or are null (invariant). The original function will be transformed to a private function and renamed to 'functionName"+ \_body. The new wrapper function will call this function. The wrapper function does two other things that are important that is saving the current state of variables that are later to be used in annotations. It will only do this for variables that are referenced within \texttt{\textbackslash old(identifier)}. The second thing it does is add function calls to annotation before and after executing the original body. Annotations of type invariant are added before and after, preconditions only before and postconditions only after. \par
-The actual printing of the contract code works with a \texttt{TokenStreamRewriter}\footnote{TODO doc tokenstreamrewriter}, which is part of the ANTLR framework. The problem with printing the contract code is that the parse tree skips all whitespace. This means that the whitespace is lost in the parsing process. Including the whitespace in the parser rules would complicate the grammar because they have to be added to every rule. The ANTLR book also has an example on a similar case like this \footnote{TODO ShiftVarComments}. The idea is that the lexer gives all tokens a number in order, but the tokens are split between two channels. The parse tree only parses tokens on the first channel and ignores the others. The \texttt{TokenStreamRewriter} has the information of both channels. The token positions are still known and this way the \texttt{TokenStreamRewriter} can replace/insert text based on parser rule nodes positions. The tool uses the rewriter to insert the annotation blocks and function body in the correct places while preserving whitespace of the original contract code.
+The actual printing of the contract code works with a \texttt{TokenStreamRewriter}\footnote{\url{https://www.antlr.org/api/Java/org/antlr/v4/runtime/TokenStreamRewriter.html}}, which is part of the ANTLR framework. The problem with printing the contract code is that the parse tree skips all whitespace. This means that the whitespace is lost in the parsing process. Including the whitespace in the parser rules would complicate the grammar because they have to be added to every rule. The ANTLR book also has an example on a similar case like this \footnote{Source code can be found here: \url{https://pragprog.com/titles/tpantlr2/source_code}. The example is in lexmagic/ShiftVarComments.java}. The idea is that the lexer gives all tokens a number in order, but the tokens are split between two channels. The parse tree only parses tokens on the first channel and ignores the others. The \texttt{TokenStreamRewriter} has the information of both channels. The token positions are still known and this way the \texttt{TokenStreamRewriter} can replace/insert text based on parser rule nodes positions. The tool uses the rewriter to insert the annotation blocks and function body in the correct places while preserving whitespace of the original contract code.
 
 \subsection{Mappings}
-The above section holds for all constructions except for \texttt{mappings}. A mapping cannot be stored in memory and are not iterable since the key set is not known. This gives problems 1) when storing the variable for \texttt{\textbackslash old()} and 2) checking a expression for all elements in a mapping. \par
+The above section holds for all constructions except for \texttt{mappings}. A mapping cannot be stored in memory and is not iterable since the key set is not known. This gives problems 1) when storing the variable for \texttt{\textbackslash old()} and 2) checking a expression for all elements in a mapping. \par
 This is solved by using an iterable mapping \footnote{\url{https://github.com/szerintedmi/solidity-itMapsLib}}. This works by wrapping the mapping definition within a struct. This struct contains the mapping and an array. The array stores the indexes which are used. Since the indexes are in an array these can be iterated. The key and value can be retrieved using the index. The value can also be retrieved using the key. In order for this to work extra code has to be added to the contract.
 \begin{itemize}
   \item Import the library at the beginning of the contract.
@@ -275,16 +329,16 @@ This is solved by using an iterable mapping \footnote{\url{https://github.com/sz
   //mapping(address => uint256) a;
   itMaps.itMapAddressUint a; 
   \end{lstlisting}
-  \item Create mapping\_old for annotation purposes.
+  \item Create mapping\_old for annotation purposes. Only when the mapping is used within a \textbackslash old() expression.
   \begin{lstlisting}[breaklines=true, language=Solidity ]
   itMaps.itMapAddressUint a_old; 
   \end{lstlisting}
   \item Replace each mapping reference with \texttt{.get(...)} or \texttt{.set(...)} depending on the context.
   \begin{lstlisting}[breaklines=true, language=Solidity ]
-  //uint256 b = a['0x0'];
-  uint256 b = a.get('0x0');
-  //a['0x1'] = 1;
-  a.set('0x1', 1); 
+  //uint256 b = a[0x0];
+  uint256 b = a.get(0x0);
+  //a[0x1] = 1;
+  a.set(0x1, 1); 
   \end{lstlisting}
 \end{itemize}
 
