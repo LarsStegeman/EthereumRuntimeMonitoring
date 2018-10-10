@@ -1,30 +1,28 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.4.24;
 
-contract BasicAnnotations {
-    bool public b;
-	address public a;
-	// This is normal top level comment
-	//@ inv a == a && c
-	//@ inv a > a && a < a
-	//@ inv !a
+contract Examples {
+    uint256 nr1;
+    uint256 nr2;
+    //@ inv nr1 >= nr2
 
 
-	uint256 n1;
-	uint256 n2;
-	address adr1;
-	address adr2;
-	//Test for correct scoping
-	//@ inv (n1 == n2) && (adr1 == adr2)
+    address owner;
+    //@ post \old(owner) == owner
+    function doSomething() public{
+        // ...
+    }
+
+    uint256[] a;
+    //@ inv \forall(x in a: a[x] > 0)
 
 
-	// This tests pre and post conditions
-	//@ pre (c + 1) > c
-	//@ post r
-	function testFunction(address c) pure public{}
+    uint256 b;
+    //@ post (msg.sender == owner) -> (\old(b) != b)
+    function changeSomething() public{
+        // ...
+    }
 
-	mapping(address => uint256) map;
-
-
-	//@ inv msg.sender == msg.sender
-	function anotherFunction() pure public{}
+    mapping(address => uint256) myMap;
+    address public adr;
+    //@ inv myMap[adr] == 5
 }
