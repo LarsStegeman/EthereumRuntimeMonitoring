@@ -37,8 +37,158 @@
 
 \section{Introduction}
 
+\section{Background}
+This section will discuss the background information that will be built upon further in the document. First we will briefly discuss the important parts of the Ethereum Blockchain. Then we will discuss the smart contracts in more detail.
+\subsection{The Ethereum blockchain}
+The Ethereum platform is built upon a distributed public ledger. On this ledger the cryptocurrency ether is stored. Ethereum has different denominations of the unit ether. The smallest value or base value is called \texttt{wei}, a single ether represents 1e18 wei. In contrast to Bitcoin, it is an account based system and not based on unspent transaction outputs (UTXO). There are two types of accounts, one is a default account in which a user controls the spending of funds through its private keys. These accounts are called "Externally owned Accounts". An account can be referenced by its address which is a hashed version of the public key. Each address has a balance and a nonce. The nonce is incremented each time the balance is updated with a transaction. The other option is a "Contract Account", which means that it is managed by code only. A contract account has more data stored on the blockchain. These include storage hash and a code field. The code is set when the contract is constructed and initialized on the blockchain, and after that can never be changed. The code that is included in contracts is called Ethereum Byte Code. This bytecode is executed in a VM called the Ethereum Virtual Machine (EVM). Each contract has a persistent storage which is also maintained on the blockchain. Contract accounts only execute code when they are called from other contracts.\par
+Transactions are created and sent to the network by creating a message and signing it with the private key of an "Externally Owned Contract". This contains information like the amount of ether and the receiver of the transaction. Additionally it can contain so called call data. This data is interpreted by the contract code and the correct function is executed. Transactions are the only entity that make changes to the storage. At an higher level overview we could see the Ethereum network as a large state machine in which changes to the state are controlled by transactions. Transactions are grouped in blocks and these blocks are distributed over the network and validated by each node. \par
+The different types of state and environments are also described more formally in the Ethereum Yellow Paper \cite{wood2014ethereum}. The Yellow Paper states that there are three separate storages in each context.
+\begin{itemize}
+    \item World state ($\sigma$): A mapping of Ethereum addresses to the accounts. Within each account the balance, contract storage, contract code and nonce are stored. For "Externally Owned Account" the contract code and storage are empty.
+    \item  Machine state ($\mu$): State of the currently executing code from a transaction. This includes program counter, contract memory and virtual machine.
+    \item Execution Environment (I): Variables related to this transaction. For example caller address, amount of ether send and call data.
+\end{itemize}
+Transactions can only be initiated from accounts. This means that the blockchain is global state computer which changes each time a transaction is executed. Transactions can be seen as function calls with additional information. This information includes the transaction sender, gas price and amount of ether.\par
+Blocks serve the purpose to group transactions and give them order. Because the ordering is very important to the outcome of the transactions. The ordering is determined within a block and should be deterministic and all nodes should agree on the global state. This securing of blocks is done using a proof of work mechanism that is used by most cryptocurrencies. However each miner also has to validate each transaction by executing the corresponding EVM code and adjusting the global state. This is also done by each individual node to validate the block which includes all the transactions.
+
+\subsection{Smart Contracts}
+Smart contracts are usually mentioned together with Ethereum. Other terms for smart contracts are "autonomous agents" or "executable code on the blockchain". It has many application domains according to the Ethereum White Paper \cite{buterin2013ethereum}. Examples of usage cases include token systems, decentralized autonomous organizations (DAO), financial derivatives, identity/reputation systems and decentralized file storage. The idea is that these domains are perfect for the blockchain since they take away the untrusted third party. Smart contracts can only operate on data within the blockchain, this means that all information has to be included in the transactions that are send from "externally owned accounts". However in this paper we will look at the functional capabilities of smart contracts on the Ethereum network. \par 
+Smart Contracts on the Ethereum network consist of two parts. Each contract has a set of functions and a storage. The contract set of functions is defined by the contract code that is deployed with the contract creation. This contract code is EVM bytecode and is usually compiled from a higher level programming language. When the contract is created the storage is initially empty. Only the contract code can make changes and add data to the persistent storage, within this storage the state of the contract is maintained. As explained before each transaction also has a state. This is called \texttt{memory}, and is initially empty. It can also be used to store data and is much cheaper in terms of gas cost. But this data is not persistent through transactions, it is only persistent within the transaction. There are also so called "logs", this storage can only be used to store data and not retrieve. This storage is usually used to provide data for the external world because it can be searched efficiently.\par
+Since the EVM is a turing complete language any program can be expressed within the platform. To mitigate the possibility of a Denial-of-Service attack (with for example an infinite loop) the principle of gas is introduced in Ethereum. Gas is used to limit the amount of complex code that can be executed within a single transaction. Each transaction only has a specified limit called the gas limit. If an execution is terminated unexpectedly or runs out of gas the complete transaction is reverted. This includes storage changes made before the exception. When a transaction is successful left over gas will be returned to the sender. In the case of an exception all the remaining gas is consumed.
+Functions are only executed when they are called by external contracts. For example if a fund is to be released after a certain amount of time (block number higher then a certain amount). These funds will not be automatically transferred once the time threshold is reached, they will only be released when the function is called again.\par
+
+\subsection{Smart Contract bugs}
+Many smart contracts are deployed to the Ethereum main network every day. When a contract is created on the blockchain the contract code is stored on the blockchain forever. This cannot be changed afterwards. Because of this limitation bugs within smart contracts can be very costly. In the past many vulnerabilities have been detected causing a loss of several million Ether. This paper will not enumerate all of them since many other articles do a good job of summarizing all the found vulnerabilities. For a complete overview see \cite{dika2017ethereum} section 3, where each attack with its corresponding vulnerability is explained in detail.
+
 \section{Solidity}
-Section explains basics of solidity in order to understand the rest of the paper. Same section as in ResearchTopics
+\label{sec:solidity}
+The most used language to develop contracts on Ethereum is Solidity \cite{solidityreadthedocs}. Solidity comes with a compiler that compiles Solidity code into EVM bytecode. This bytecode is what is executed and put on the blockchain. Solidity has features like control flow, types and different storage constructions. Additionally it has some global variables that apply only to the blockchain setting. In this section we will further introduce the language in detail.
+\subsection{Syntax}
+The syntax that is used by Solidity is heavily inspired by Javascript. Solidity is in contrast to Javascript strongly typed. It offers the common types in normal programming languages like; booleans, integers, strings, fixed point numbers. Since each contract is executed on the blockchain, storage is extremely costly in terms of gas cost. This is why many different sizes for integers exist: \texttt{uint8}, \texttt{int8}, \texttt{uint16}, until \texttt{uint256} and \texttt{int256}. \par
+Solidity offers a number of different options for more complex types. These complex types have an extra annotation that defines their storage location. This can either be \texttt{storage} or \texttt{memory}. 
+\begin{itemize}
+    \item Structs are a form to create new types in Solidity. Structs can contain any type including mappings except itself. For example a struct type A cannot contain a member of type A (no recursive definition).  
+    \item Arrays can be defined in memory or storage. Storage arrays can hold arbitrary types, memory arrays can not contain mappings. Storage arrays can be dynamically increased in size, however memory arrays are always fixed length.  
+    \item Mappings can only be defined in storage. They map a key of a certain type to a value of another type. They can be compared to hash tables in normal programming languages. However the key set of a mapping is not stored, this makes mappings not iterable. 
+\end{itemize}
+The code snippet below shows how all these constructions can be used within a contract.
+\begin{lstlisting}[
+    language=Solidity
+]
+pragma solidity ^0.4.23;
+
+contract C {
+  // State variables are always stored in storage
+  uint256 public number;
+  uint[] x; 
+  mapping(address => uint256) myMap;
+  // Definition of type myStruct
+  struct myStruct{
+    uint256 a;
+    address b;
+  }
+
+  // the data location of memoryArray is memory
+  function f(uint[] memoryArray) public {
+    x = memoryArray; // works, copies the whole array to storage
+    var y = x; // works, assigns a pointer, data location of y is storage
+    y[7]; // fine, returns the 8th element
+    y.length = 2; // fine, modifies x through y
+    delete x; // fine, clears the array, also modifies y
+    // The following does not work; it would need to create a new temporary /
+    // unnamed array in storage, but storage is "statically" allocated:
+    // y = memoryArray;
+    // This does not work either, since it would "reset" the pointer, but there
+    // is no sensible location it could point to.
+    // delete y;
+    g(x); // calls g, handing over a reference to x
+    h(x); // calls h and creates an independent, temporary copy in memory
+    
+    // Declaring a mapping in memory is not allowed
+    // mapping(address => uint256) memory temp_map;
+    
+    myStruct memory a; // declares a variable of type struct in memory
+    myStruct b; // default of complex types is storage
+    b.a = 100; // will assign 100 to the variable number!
+  }
+
+  function g(uint[] storage storageArray) internal {}
+  function h(uint[] memoryArray) public {}
+}
+\end{lstlisting}
+
+\subsection{Structure}
+In Solidity contracts are treated like objects in Object Oriented Programming languages. Contracts can contain state variables and functions and inheritance is supported between multiple contracts. A contract can have a constructor which will be called upon creation of the contract on the blockchain. In the code example below a simple contract is shown with the basic structure.
+\begin{lstlisting}[
+    language=Solidity
+]
+pragma solidity ^0.4.23;
+
+contract SimpleStorage {
+  uint public storedData; // State variable
+  
+  //Constructor will be called upon creation on blockchain.
+  constructor(uint data){ 
+    storedData = data;
+  }
+  
+  function setData(uint data) public{
+    storedData = data;
+  }
+  function() payable{
+    //Unnamed function will be called if no function signature matches
+  }
+}
+\end{lstlisting}
+Solidity also has different visibility keywords. Their behaviour is a bit different from normal programming languages since it is executed on a blockchain setting. Visibility can be defined for functions and variables.
+\begin{itemize}
+    \item \texttt{external}: External can only be used by functions and means that they can not be called from internal functions. They can be called from other contracts.
+    \item \texttt{public}: Public can be used for functions and state variables. For functions it means that it can be called both internal and external. For state variables it means that a getter function is automatically generated.
+    \item \texttt{internal}: Internal functions and state variables can only be accessed internally from within the current contract and derived contracts.
+    \item \texttt{private}: Private functions and state variables are only visible to the contract they are defined in.
+\end{itemize}
+The extra keywords are used because different functionality can be desired by contracts. Also note that private variables can be read outside of the EVM by inspecting the storage of the smart contract \footnote{For example with the web3.js interface with the call \texttt{web3.eth.getStorageAt(addressHexString, position)}}\par
+Solidity also gives the possibility to define function modifiers. These are usually used to check a condition before execution of a function. Modifiers can be inherited from other contracts and reused in functions on that contract. As explained in the previous section the Ethereum blockchain has another type of storage called "logs".  Logs are read only and can be written to using \texttt{Events}. Events have to be defined in the contract itself and can be inherited, events can have specified parameters to emit the correct information. Below is a Solidity code snippet showing the basic behaviour of both constructions.
+\begin{lstlisting}[
+    language=Solidity
+]
+pragma solidity ^0.4.23;
+
+contract myContract {
+  uint public data; 
+  
+  //Event declaration
+  event dataIncreased(address sender, uint amount);
+  
+  //Modifier declaration
+  modifier onlyPositive(uint number){
+    require(number >  0);
+    _;
+  }
+  
+  //Before function call check modifier onlyPositive
+  function increment(uint number) onlyPositive(number) public{
+    data +=number;
+    //Emit event dataIncreased
+    emit dataIncreased(msg.sender,number);
+  }
+} 
+\end{lstlisting}
+The function \texttt{increment} has a modifier that will be executed when the function is called. The modifier \texttt{onlyPositive} checks the number and requires the number to be greater then zero. The "\_;" indicates the rest of the body of the function. This way function modifiers can be used to add code before and after the normal function body. If the assumption fails the require will throw an exception and the transaction will stop executing. This means that all state changes made during the transactions are reverted and the transaction is marked as failed. There are two types of constructions that can be used to detect undesired behaviour one is \texttt{require()} the other is \texttt{assert()}. Both function will throw an exception when the statement is false, but assert will consume all remaining gas while require will not consume any more gas. This means that in practice \texttt{require} is used to check and validate user input, and \texttt{assert} is used to test invariants and internal error checking. Both functions will create an exception that will bubble up to through the call structure. At this point exceptions can not be caught.
+
+\subsection{Blockchain specific variables}
+What makes Solidity special in terms of programming languages is that it is executed on the blockchain. All code is executed because of the transactions that are being sent to the network. These transactions can be seen as rich function calls with extra information. This extra information is available in special constructed variables which are globally accessible during execution of the contract.\par
+There are two objects that contain information about the blockchain these are: \texttt{block} and \texttt{msg}. The block object contains variables like \texttt{block.number}, \texttt{block.timestamp}, \texttt{block.difficulty} and \texttt{block.coinbase} (current block miner address). The information in block is the block where the current transaction is mined in. The object msg contains information about the current transaction. These are found in variables like: \texttt{msg.gas} (remaining gas), \texttt{msg.value} (value sent in wei) and \texttt{msg.sender} (address of the sender).
+The \texttt{address} object is used for communication between contracts. This makes it possible to execute code of multiple contracts within a single transaction. The keyword \texttt{this} refers to the address object of the current contract. This also contains the balance of the contract under the variable \texttt{<address>.balance}. There are five different flavors of calling other contracts.
+\begin{itemize}
+    \item \texttt{<address>.transfer(uint256 amount)}: forwards given amount in wei to address, throws on failure. The function sends 2300 gas with the transfer. 
+    \item \texttt{<address>.send(uint256 amount) returns (bool)}: same behaviour as transfer but returns false on failure.
+    \item \texttt{<address>.call(...) returns (bool)}: forwards all gas to function call. Returns false on failure.
+    \item \texttt{<address>.delegatecall(...) returns (bool)}: same behaviour as call but storage and state variables of original contract are used. This makes it possible to create library functionality within the blockchain. The library contract can contain functions that do not require access to state variables. That means that they must rely on their input. Or the library contract has to have to exactly the same state variables declared in order to be used in functions of the library contract.
+    \item \texttt{<address>.callcode(...) returns (bool)}: older version of delegatecall. Usage is discouraged and will be removed in the future.
+\end{itemize}
+All these transfer functions can be sent to "Externally Owned Contracts", but also on "Contract Accounts". This means that arbitrary code can be executed when invoking one of these methods. To limit the amount of code that can be executed by a remote function call it is important to specify the amount of gas to be sent with the transfer. Exceptions can not be caught within contracts, they bubble up through the call tree. Exceptions can be caught when using the \texttt{send} function because then this will return false instead of rethrowing/passing on the exception which is what the \texttt{transfer} method does.
+
 
 \section{Tool Overview}
 % \begin{itemize}
@@ -56,7 +206,6 @@ In the picture the complete overview of the tool can be seen. Within the dashed 
 First contract code has to be annotated according to a specified grammar. Section \ref{sec:annotationlanguage} explains the grammar in more detail and gives some example annotations. The tool ANTLR \cite{parr2013definitive} is used to generate code for the lexer and parser. The grammar has to be expressed in the language that is recognized by the ANTLR tool. The automatically generated parser is used to parse Solidity contract code and annotations into a parse tree. The parse tree makes it able to walk the complete contract code and do analysis on specific parts of the contract. This parse tree is used in later stages of the tool. \par
 The next step is type checking the annotations. This uses the parse tree to examine the annotations and check if they are valid. The type checking is done bottom up and works in two phases. The first phase collects all the relevant variables. This includes state variables and function definitions (function name, arguments and return values). The next phase uses this information to do the actual type checking of the annotations. This is explained in more detail in Section \ref{sec:typechecker}. \par
 The result of the type checker phase are type-checked annotations. In practice these are parse tree objects in which the types correspond to the operators used and the identifiers that are used are also defined in the contract. This is used as input for the generation phase. The generation phase will operate on the information that is created during the type checker phase. For each annotation it will generate the code that is needed to check it during runtime. This happens in a single pass of the complete parse tree. Details on this phase can be found in Section \ref{sec:generation}. \par
-Using the annotation grammar all specifications can be expressed. But not all specifications can be translated to code that can be checked at runtime. This means that some annotations will not be translated to runtime monitored contract code. This is the case because of limitations within the Solidity language. For example the mapping type is not iterable and the keys are not known. This means that mappings have to be replaced with other constructions. In the current state of the tool only basic mappings can be replaced with iterable constructions. \par
 The output of the type checker phase can also be used for static analysis tools. The benefit of using the tool to validate the annotations is that the result is a type checked parse tree that can be parsed and traversed in various ways to be useful for static verification methods. 
 
 \section{Annotation Language}
@@ -263,7 +412,7 @@ function annotation0(){
 }
 
 //@ post 'post_expression'
-funtion annotation1('argument'){
+function annotation1('argument'){
   // check 'post_expression'
 }
 
@@ -344,7 +493,8 @@ This is solved by using an iterable mapping \footnote{\url{https://github.com/sz
 
 \section{Limitations}
 \label{sec:limitations}
-% mappings, contract inheritance, scoping, /result 
+%Using the annotation grammar all specifications can be expressed. But not all specifications can be translated to code that can be checked at runtime. This means that some annotations will not be translated to runtime monitored contract code. This is the case because of limitations within the Solidity language. For example the mapping type is not iterable and the keys are not known. This means that mappings have to be replaced with other constructions. In the current state of the tool only basic mappings can be replaced with iterable constructions.
+% mappings, contract inheritance, scoping, /result, timestamp
 
 \section{Tool Usage}
 The code of the tool is publicly available on the repository \url{https://github.com/LarsStegeman/EthereumRuntimeMonitoring}. Instructions on how to use the tool on other contracts can be seen in the README.
@@ -450,7 +600,7 @@ The first property is that when a transfer function is executed the balance of t
  (balanceOf[_to] == (\old(balanceOf[_to]) + _value) 
  && balanceOf[msg.sender] == (\old(balanceOf[msg.sender]) - _value) 
  && \forall(x in balanceOf: (x != _to && x != msg.sender) -> balanceOf[x] == \old(balanceOf[x]))) 
- || msg.sender == _to 
+ || (msg.sender == _to  && \forall(x in balanceOf: balanceOf[x] == \old(balanceOf[x])))
 \end{lstlisting}
 Going over it line by line:
 \begin{enumerate}
@@ -482,17 +632,53 @@ The annotation that is added to the function \texttt{logMessage} checks the basi
 The code that is generated stores the original variables in memory before calling the function body. After the function is executed the old variables will be compared to the current state variables. Every call to the function \texttt{logMessage} will report an error since each time the state variables \texttt{admin} and \texttt{nrOfMessages} are changed. These are changed because the struct \texttt{message} within the function body defaults to \texttt{storage}. 
 \lstinputlisting[language=Solidity, breaklines= true, tabsize = 2, literate={\ \ }{{\ }}1]{examples/VulnerableContract_generated.sol}
 
+
+\section{Related Work}
+\label{sec:RelatedWork}
+There is a lot of work related to this topic. Ethereum is not the only blockchain platform that supports the deployment of smart contracts, but this section will focus on the development and research for the Ethereum blockchain specifically. There are papers discussing the verification of smart contracts. They can be further categorized as static analysis or formal verification. Additionally other contract languages have been proposed to help writing secure smart contracts. The last subsection discusses some other related work.
+
+\subsection{Smart Contract Verification}
+Due to the recent exploits that were found on the Ethereum blockchain this research area has seen a lot of attention. Especially in the field of formal verification. There are many proposals of verification tools that will help to write secure smart contracts. The security of smart contracts is important because if the bytecode of a contract is committed to the blockchain it cannot be changed afterwards. This means that testing and verification of the code before committing it to the network is important. The efforts can be categorized in two groups; static analysis and formal verification. The first class are tools that analyse the EVM code or a higher level code and check for patterns. Patterns that are known to be vulnerable get reported. The code is not actually executed, only symbolically. The second group is formal verification. These tools work by giving a specification for a given program. The tool then proves that the program is correct for all possible inputs with respect to the given specification. Some tools fully automate this process, some work with a proof assistant. Note that the Solidity code is usually translated to EVM or some intermediate language in which the proofs can be more easily automated.
+\subsubsection{Static Analysis Tools}
+There are many tools that are defined in this area. Most of the tools have the same functionality. You can analyse contracts using the Solidity Code or EVM bytecode. These contracts can be analysed locally or from an online provider (Ethereum mainnet or one of the test nets). Examples of such tools are Mythril \cite{mythrilrepo}, Securify \cite{securifywebsite} and Oyente \cite{luu2016making}. The Oyente tool also offers the possibility to analyse all the contracts on the whole blockchain. Their tool is not only available on Github but also has a paper which describes the choices made fo the analysis tool. The tools under this category do not test for errors in business logic. For example if a function returns too much ether on a specific input, this will not be detected by static analysis tools. 
+\subsubsection{Formal Verification Tools}
+To verify a contract a specification has to be written. Specification gives meaning to what the contract should do. However because Solidity is not fit for this most tools are defined at the EVM bytecode level, or introduce an intermediate contract language. These programs are then proven correct considering all possible inputs with respect to the given specification. KEVM \cite{hildenbrandt2017kevm}, a formalization of the EVM in F* \cite{grishchenko2018semantic} and eth-isabelle \cite{hirai2017defining} are very similar. All three tools are able to execute a large set of the official ethereum test suite and are able to proof specifications correct for certain contracts. Other approaches use an intermediate language over which properties can be proven correct. Lolisa \cite{yang2018lolisa} and Scilla \cite{sergey2018scilla} fall under this category. 
+
+\subsection{Smart Contract Languages}
+Smart contracts are usually written in a high level language that compiles to EVM (Ethereum Virtual Machine) bytecode. Currently the best known and most used language is Solidity (as described in detail in section \ref{sec:solidity}). But there are other options available that also compile to EVM bytecode. They differ in their syntax and influences by other languages.  
+\subsubsection{Bamboo}
+Bamboo is a morphing smart contract language. State transitions are a core part of the language design. This makes the state transitions in smart contracts explicit. This way it avoids re-entrancy by default. Each function is declared within a state and executing a function causes a state transition. This way there should be less surprises in the execution of smart contracts. The project is located in a repository located at \url{https://github.com/pirapira/bamboo}. As an example the smart contract for a crowd funding is used. The crowd funding usually has several stages in which different things can happen. In Solidity these stages are usually modeled using boolean variables and enforced using \texttt{modifiers}. With this approach it is hard to keep track which functions are enabled at which state. In Bamboo this is not the case since functions are declared within a state and functions modify the signature of the smart contract. 
+\subsubsection{Vyper}
+Vyper is a new and experimental smart contract programming language. It is maintained by the Ethereum Foundation at \url{https://github.com/ethereum/vyper}. The idea is to limit certain functions and aspects that are possible in Solidity to make writing smart contracts less error prone. It also tries to make smart contracts more human readable to make it simpler to see what will happen when a function is called. For example \texttt{modifiers}, inline assembly and class inheritance is not allowed in Vyper as opposed to Solidity. 
+
+\subsection{Other related work}
+A number of other proposals have been published which try to make smart contracts more secure. They do not belong to a certain category but are related to the current work. Some projects only have source code available and do not have documentation or a paper.
+\subsubsection{ContractLARVA}
+ContractLARVA can be found on github at \url{https://github.com/gordonpace/contractLarva}. Following the instructions on the README you can write a specification and a contract in Solidity. The compiler will combine these two and output a new Solidity contract with the runtime verification checks in place. Properties have to be specified using \textit{dynamic event automata} (DEA) \cite{CGG08FMICS}. The tool is based on a similar tool called LARVA for Java. \par
+For example consider the following Solidity contract. In this contract we would like to monitor the variable \texttt{number}, it should always be positive.
+\lstinputlisting[language=Solidity]{examples/MyContract.sol}
+The monitor has to be defined in DEA syntax.
+\lstinputlisting[language=C]{examples/MyDEA.dea}
+The specification and contract are combined into a new contract with the added behaviour. The output of the tool can be seen below.
+\lstinputlisting[language=Solidity]{examples/MyContractOutput.sol}
+The above example is a contract that can be deployed to a local testnet. However all calls to the function \texttt{setNumber} will fail because the code is not initialized correctly. The \texttt{LARVA\_Status} is never set to running thus the modifier \texttt{LARVA\_ContractIsEnabled} will throw an exception. This approach has several limitations, for example monitors can only be added with states. Even if the contract does not represent a state machine. The states are represented as \texttt{int8} in the generated contract code, which cost extra gas. States have to be initialized in the beginning. This means that the generated contract has to have a constructor and potentially call the original constructor. This changes the contract interface and thus could limit the testing of the contract because other applications could depend on it. To test a certain specification on previous values the variable is stored to a storage location. This causes a lot of extra gas cost where should be possible to store in in \texttt{memory}. In the previous example see the variable \texttt{LARVA\_previous\_number}.
+
+\subsubsection{The Hydra Project}
+The Hydra Framework is a project for smart contracts on the Ethereum network. It tries to make smart contracts more secure by making multiple implementations of the same contract. They call this \textit{N-of-N-version programming}. The different implementations are controlled by a meta contract which forwards the incoming calls to all the implementations. If the implementations do not agree on a single answer, the meta contract will be able to react on this. When such a vulnerability is found a bounty is given to the person who exploited the vulnerability. They call this principle \textit{the exploit gap}, this means that a hacker should claim the bounty instead of exploiting the vulnerability. More information can be found in their paper \cite{breidenbachenter}. 
+
+\subsubsection{FSolidM}
+FSolidM \cite{mavridou2018tool} is a fully functional tool which helps developing secure smart contracts. It provides a GUI to specify contracts using finite state machines (FSM). These FSMs are then translated to secure solidity contract code. This tool helps creating secure smart contracts since the semantics of the FSM is well defined. The tool comes with a code generator for generating Solidity code, and also the possibility to define plugins. These plugins can be used to define certain patterns that implement common design patterns or include security constraints. 
+\subsubsection{Quantitative Analysis of Smart Contracts}
+Chatterjee et al. \cite{chatterjee2018quantitative} analyse the utility (expected payout) for smart contracts. It does so by using game theory and incentives to analyse a stateful game. It uses a simplified contract language and translates these contracts to state-based games. These games can then be analysed by the tool for their expected payout. The functions in the games are assumed to be executed at distinct timeslots. This is however not the case for Ethereum since one can always write a specific contract to call all functions within the same transaction. Also calls to other contracts are not considered while this is where most of the complexity and vulnerabilities are discovered in real world contracts.
+
+\section{Conclusion}
+
 \section{Future work}
 \begin{itemize}
   \item The tool cannot handle contract inheritance.
   \item The tool does not have a mechanism for exposing the parse tree for other programs after validation.
 \end{itemize}
 
-\section{Related Work}
-\begin{itemize}
-  \item ContractLarva: runtime monitoring based on defined states and transitions.
-  \item 
-\end{itemize}
 
 \bibliographystyle{IEEEtran}
 \bibliography{IEEEfull,references}
