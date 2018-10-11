@@ -22,14 +22,19 @@ contract SimpleToken {
 	}
 
 	/* Send coins */
-	//@ post (balanceOf[_to] == (\old(balanceOf[_to]) + _value) && balanceOf[msg.sender] == (\old(balanceOf[msg.sender]) - _value) && \forall(x in balanceOf: (x != _to && x != msg.sender) -> balanceOf[x] == \old(balanceOf[x]))) || msg.sender == _to
+	//@ post (balanceOf[_to] == (\old(balanceOf[_to]) + _value) && balanceOf[msg.sender] == (\old(balanceOf[msg.sender]) - _value) && \forall(x in balanceOf: (x != _to && x != msg.sender) -> balanceOf[x] == \old(balanceOf[x]))) || (msg.sender == _to  && \forall(y in balanceOf: balanceOf[y] == \old(balanceOf[y])))
     function annotation0(address _to, uint256 _value) view private{ 
         bool expression0= true;
-        for(uint256 i=0; i<balanceOf.size() &&expression0;i++){
-            var x= balanceOf.getKeyByIndex(i);
+        for(uint256 i0=0; i0<balanceOf.size() &&expression0;i0++){
+            var x= balanceOf.getKeyByIndex(i0);
             expression0=!(x!=_to&&x!=msg.sender)||balanceOf.get(x)==balanceOf_old.get(x);
-    }
-        assert((balanceOf.get(_to)==(balanceOf_old.get(_to)+_value)&&balanceOf.get(msg.sender)==(balanceOf_old.get(msg.sender)-_value)&&expression0)||msg.sender==_to);
+        }
+        bool expression1= true;
+        for(uint256 i1=0; i1<balanceOf.size() &&expression1;i1++){
+            var y= balanceOf.getKeyByIndex(i1);
+            expression1=balanceOf.get(y)==balanceOf_old.get(y);
+        }
+        assert((balanceOf.get(_to)==(balanceOf_old.get(_to)+_value)&&balanceOf.get(msg.sender)==(balanceOf_old.get(msg.sender)-_value)&&expression0)||(msg.sender==_to&&expression1));
     }
 
 	function transfer(address _to, uint256 _value) public {

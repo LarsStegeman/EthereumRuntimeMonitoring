@@ -16,7 +16,7 @@ contract SimpleToken {
 	}
 
 	/* Send coins */
-	//@ post (balanceOf[_to] == (\old(balanceOf[_to]) + _value) && balanceOf[msg.sender] == (\old(balanceOf[msg.sender]) - _value) && \forall(x in balanceOf: (x != _to && x != msg.sender) -> balanceOf[x] == \old(balanceOf[x]))) || msg.sender == _to
+	//@ post (balanceOf[_to] == (\old(balanceOf[_to]) + _value) && balanceOf[msg.sender] == (\old(balanceOf[msg.sender]) - _value) && \forall(x in balanceOf: (x != _to && x != msg.sender) -> balanceOf[x] == \old(balanceOf[x]))) || (msg.sender == _to  && \forall(y in balanceOf: balanceOf[y] == \old(balanceOf[y])))
 	function transfer(address _to, uint256 _value) public {
 		// Check if the sender has enough
 		require(balanceOf[msg.sender] >= _value);

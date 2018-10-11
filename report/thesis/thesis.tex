@@ -493,8 +493,9 @@ This is solved by using an iterable mapping \footnote{\url{https://github.com/sz
 
 \section{Limitations}
 \label{sec:limitations}
-%Using the annotation grammar all specifications can be expressed. But not all specifications can be translated to code that can be checked at runtime. This means that some annotations will not be translated to runtime monitored contract code. This is the case because of limitations within the Solidity language. For example the mapping type is not iterable and the keys are not known. This means that mappings have to be replaced with other constructions. In the current state of the tool only basic mappings can be replaced with iterable constructions.
 % mappings, contract inheritance, scoping, /result, timestamp
+There are some limitations of the tool that are present in the current version of the implementation. Some of the limitations are in the annotation language and some of them are because of the generated Solidity code. First limitation is the missing level of scopes. In Solidity contract inheritance is supported. This makes it able to define small contracts and inherit from these contracts. This makes development of smart contracts modular and scalable. The tool currently does not support inheritance. This means that the tool only parses the main contract and does not look in the inheritance tree. Annotations can only make use of definitions that are declared within the current contract. To solve this problem the tool would have to be extended with a scope mechanism. Different variables are declared in different contracts and thus have a different scope. Annotations should be able to reference inherited properties and make use of the variables. \par
+Since mappings are not iterable in Solidity these are replaced by iterable mappings. However iterable mappings are only replaced for a few types of mappings. These are mappings which maps \texttt{uint $\Rightarrow$ address}, \texttt{address $\Rightarrow$ uint}, \texttt{uint $\Rightarrow$ uint}, all other combinations are not supported. Also nested mappings are excluded from the generation. The iterable mapping solution that is used in the current version of the tool uses a global variable to store the \textbackslash old state of the mapping. Using another function within a function which uses an  annotation would overwrite the global variable, making it unusable to check the annotation expression.\par
 
 \section{Tool Usage}
 The code of the tool is publicly available on the repository \url{https://github.com/LarsStegeman/EthereumRuntimeMonitoring}. Instructions on how to use the tool on other contracts can be seen in the README.
@@ -673,7 +674,7 @@ Chatterjee et al. \cite{chatterjee2018quantitative} analyse the utility (expecte
 
 \section{Conclusion}
 
-\section{Future work}
+\subsection{Future work}
 \begin{itemize}
   \item The tool cannot handle contract inheritance.
   \item The tool does not have a mechanism for exposing the parse tree for other programs after validation.

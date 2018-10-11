@@ -281,31 +281,32 @@ public class SolidityPrinter extends SolidityAnnotatedBaseVisitor<String>{
             }
         }
         //Determine if //exists or //forall
+        String indexIdentifier = "i"+expressionNumber;
         if(set.type == SolidityType.ARRAY){
             if(ctx.getText().startsWith("\\forall")){
                 loop+= "        bool " + expressionBoolean + "= true;\n";
-                loop+= "        for(uint256 i=0; i<" + ctx.identifier(1).getText() + ".length &&" + expressionBoolean+";i++){\n";
+                loop+= "        for(uint256 "+ indexIdentifier + "=0; "+indexIdentifier+"<" + ctx.identifier(1).getText() + ".length &&" + expressionBoolean+";"+indexIdentifier+"++){\n";
                 loop+= "            " + expressionBoolean + "=" + visit(ctx.annotationExpression(0)) + ";\n"; 
-                loop+= "    }\n";
+                loop+= "        }\n";
             }else{
                 loop+= "        bool " + expressionBoolean + "= false;\n";
-                loop+= "        for(uint256 i=0; i<" + ctx.identifier(1).getText() + ".length && !" + expressionBoolean +";i++){\n";
+                loop+= "        for(uint256 "+indexIdentifier+"=0; "+indexIdentifier+"<" + ctx.identifier(1).getText() + ".length && !" + expressionBoolean +";"+indexIdentifier+"++){\n";
                 loop+= "            " + expressionBoolean + "= ( " + visit(ctx.annotationExpression(0)) + ");\n"; 
-                loop+= "    }\n";
+                loop+= "        }\n";
             }
         }else{
             if(ctx.getText().startsWith("\\forall")){
                 loop+= "        bool " + expressionBoolean + "= true;\n";
-                loop+= "        for(uint256 i=0; i<" + ctx.identifier(1).getText() + ".size() &&" + expressionBoolean+";i++){\n";
-                loop+= "            " + "var " + ctx.identifier(0).getText() + "= " + ctx.identifier(1).getText() + ".getKeyByIndex(i);\n";
+                loop+= "        for(uint256 "+indexIdentifier+"=0; "+indexIdentifier+"<" + ctx.identifier(1).getText() + ".size() &&" + expressionBoolean+";"+indexIdentifier+"++){\n";
+                loop+= "            " + "var " + ctx.identifier(0).getText() + "= " + ctx.identifier(1).getText() + ".getKeyByIndex("+indexIdentifier+");\n";
                 loop+= "            " + expressionBoolean + "=" + visit(ctx.annotationExpression(0)) + ";\n"; 
-                loop+= "    }\n";
+                loop+= "        }\n";
             }else{
                 loop+= "        bool " + expressionBoolean + "= false;\n";
-                loop+= "        for(uint256 i=0; i<" + ctx.identifier(1).getText() + ".size() && !" + expressionBoolean +";i++){\n";
-                loop+= "            " + "var " + ctx.identifier(0).getText() + "= " + ctx.identifier(1).getText() + ".getKeyByIndex(i);\n";
+                loop+= "        for(uint256 "+indexIdentifier+"=0; "+indexIdentifier+"<" + ctx.identifier(1).getText() + ".size() && !" + expressionBoolean +";"+indexIdentifier+"++){\n";
+                loop+= "            " + "var " + ctx.identifier(0).getText() + "= " + ctx.identifier(1).getText() + ".getKeyByIndex("+indexIdentifier+");\n";
                 loop+= "            " + expressionBoolean + "= ( " + visit(ctx.annotationExpression(0)) + ");\n"; 
-                loop+= "    }\n";
+                loop+= "        }\n";
             }
         }
 
