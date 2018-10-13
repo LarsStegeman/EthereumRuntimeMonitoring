@@ -20,23 +20,51 @@
 \input{solidity-highlighting.tex}
 \lstset{escapeinside={<@}{@>}}
 
-\title{Runtime Verification of Smart Contracts \\
+\title{\vspace{3.0cm}\textbf{Solitor: Runtime Verification of Smart Contracts}\\
 \large On the Ethereum network \\}
 
-\author{Lars Stegeman [s1346466]\\ l.stegeman@student.utwente.nl}
+\author{Lars Stegeman\\ l.stegeman@student.utwente.nl}
+\date{\vspace{0.5cm}\today}
 
 \begin{document}
-
+\begin{titlepage}
 \maketitle
+\vspace{1.5cm}
+\begin{center}
+\textbf{Master Thesis}\\
+Master of Computer Science\\
+Methods and tools for verification specialization\\
+\vspace{0.5cm}
+\textbf{University of Twente}\\
+Faculty of Electrical Engineering, Mathematics and Computer Science\\
+Formal Methods and Tools research group\\
+\end{center}
+\vfill
+\textbf{Supervisors}\\
+prof.dr. J.C. van de Pol, University of Twente\\
+dr. M.H. Everts, University of Twente\\
+\end{titlepage}
 
-\tableofcontents
-
-
-
+\newpage
 \section{Abstract}
+In this paper the tool Solitor is presented. Solitor can parse and translate annotations in Solidity contracts to generated Solidity code which checks the expressions at runtime. To recognize the annotations the original Solidity grammar is extended and is similar to that of JML. The rest of this paper explains the background of the Ethereum network and how smart contract execute on the blockchain. Furthermore the tool is tested on two case studies of smart contracts. 
+\newpage
+\tableofcontents
+\newpage
 
 \section{Introduction}
+This research will try to answer the following questions:
+\begin{enumerate}
+\item \textbf{Property specification/definition.}
+The first step is to decide and analyse which properties should be able to be checked and specified. Properties should make sense and should be able to be checked within Solidity. This raises the question:
+\textit{What properties should the tool be able to identify and specify?}. Specifically the \textit{syntax} has to be defined. And a \textit{parser} has to be written to decide if properties are according to the defined syntax. 
+\item \textbf{Tool development.}
+The next step is defining the output of the tool. In other words: \textit{What can be generated from the specification and smart contract source code?}
+\item \textbf{Tool usage on smart contract.}
+The last step is to test the tool on real world smart contract. And see if it can detect vulnerabilities that would otherwise have not been found. \textit{How can the tool be used to detect vulnerabilities in smart contracts?}.
+\end{enumerate}
 
+\newpage
 \section{Background}
 This section will discuss the background information that will be built upon further in the document. First we will briefly discuss the important parts of the Ethereum Blockchain. Then we will discuss the smart contracts in more detail.
 \subsection{The Ethereum blockchain}
@@ -60,6 +88,7 @@ Functions are only executed when they are called by external contracts. For exam
 \subsection{Smart Contract bugs}
 Many smart contracts are deployed to the Ethereum main network every day. When a contract is created on the blockchain the contract code is stored on the blockchain forever. This cannot be changed afterwards. Because of this limitation bugs within smart contracts can be very costly. In the past many vulnerabilities have been detected causing a loss of several million Ether. This paper will not enumerate all of them since many other articles do a good job of summarizing all the found vulnerabilities. For a complete overview see \cite{dika2017ethereum} section 3, where each attack with its corresponding vulnerability is explained in detail.
 
+\newpage
 \section{Solidity}
 \label{sec:solidity}
 The most used language to develop contracts on Ethereum is Solidity \cite{solidityreadthedocs}. Solidity comes with a compiler that compiles Solidity code into EVM bytecode. This bytecode is what is executed and put on the blockchain. Solidity has features like control flow, types and different storage constructions. Additionally it has some global variables that apply only to the blockchain setting. In this section we will further introduce the language in detail.
@@ -189,7 +218,7 @@ The \texttt{address} object is used for communication between contracts. This ma
 \end{itemize}
 All these transfer functions can be sent to "Externally Owned Contracts", but also on "Contract Accounts". This means that arbitrary code can be executed when invoking one of these methods. To limit the amount of code that can be executed by a remote function call it is important to specify the amount of gas to be sent with the transfer. Exceptions can not be caught within contracts, they bubble up through the call tree. Exceptions can be caught when using the \texttt{send} function because then this will return false instead of rethrowing/passing on the exception which is what the \texttt{transfer} method does.
 
-
+\newpage
 \section{Tool Overview}
 % \begin{itemize}
 %   \item Tool works in two phases validation and generation.
@@ -208,6 +237,7 @@ The next step is type checking the annotations. This uses the parse tree to exam
 The result of the type checker phase are type-checked annotations. In practice these are parse tree objects in which the types correspond to the operators used and the identifiers that are used are also defined in the contract. This is used as input for the generation phase. The generation phase will operate on the information that is created during the type checker phase. For each annotation it will generate the code that is needed to check it during runtime. This happens in a single pass of the complete parse tree. Details on this phase can be found in Section \ref{sec:generation}. \par
 The output of the type checker phase can also be used for static analysis tools. The benefit of using the tool to validate the annotations is that the result is a type checked parse tree that can be parsed and traversed in various ways to be useful for static verification methods. 
 
+\newpage
 \section{Annotation Language}
 \label{sec:annotationlanguage}
 The first step towards implementing the tool is to define an annotation syntax, and formally write this down using a grammar. The parser generator that is used is called ANTLR \cite{parr2013definitive}. Using the grammar definition the lexer and parser will be automatically generated. The output of this phase is a parse tree that can be used in later stages of the tool.
@@ -337,6 +367,7 @@ Functions are not recognized in annotations. This is because some functions coul
 \lstinputlisting[language=Solidity, linerange={11-14}]{examples/ParseError.sol}
 The construction \texttt{\textbackslash old()} can only reference primary expression and not complex expressions.
 
+\newpage
 \section{Type Checker}
 \label{sec:typechecker}
 \subsection{Design}
@@ -381,6 +412,7 @@ The next phase will only parse the annotation part of the contract code, this me
 If any of the types do not correspond to the expected value a validation error is reported and logged. \par
 In case complex types are used such as structs the additional information is retrieved from the corresponding object that is referenced. For example consider a identifier \texttt{a.b}. This would mean that the type of \texttt{a} must be a struct and that in the definition of the struct the type of the identifier \texttt{b} must be retrieved. Additionally annotations can make use of function arguments and reference them. This is solved by looking up the \texttt{SolidityFunction} object that the annotation was declared above. This makes it possible to retrieve the types of function arguments and use them within the annotation.
 
+\newpage
 \section{Generation}
 \label{sec:generation}
 % \begin{itemize}
@@ -491,12 +523,14 @@ This is solved by using an iterable mapping \footnote{\url{https://github.com/sz
   \end{lstlisting}
 \end{itemize}
 
+\newpage
 \section{Limitations}
 \label{sec:limitations}
 % mappings, contract inheritance, scoping, /result, timestamp
 There are some limitations of the tool that are present in the current version of the implementation. Some of the limitations are in the annotation language and some of them are because of the generated Solidity code. First limitation is the missing level of scopes. In Solidity contract inheritance is supported. This makes it able to define small contracts and inherit from these contracts. This makes development of smart contracts modular and scalable. The tool currently does not support inheritance. This means that the tool only parses the main contract and does not look in the inheritance tree. Annotations can only make use of definitions that are declared within the current contract. To solve this problem the tool would have to be extended with a scope mechanism. Different variables are declared in different contracts and thus have a different scope. Annotations should be able to reference inherited properties and make use of the variables. \par
 Since mappings are not iterable in Solidity these are replaced by iterable mappings. However iterable mappings are only replaced for a few types of mappings. These are mappings which maps \texttt{uint $\Rightarrow$ address}, \texttt{address $\Rightarrow$ uint}, \texttt{uint $\Rightarrow$ uint}, all other combinations are not supported. Also nested mappings are excluded from the generation. The iterable mapping solution that is used in the current version of the tool uses a global variable to store the \textbackslash old state of the mapping. Using another function within a function which uses an  annotation would overwrite the global variable, making it unusable to check the annotation expression.\par
 
+\newpage
 \section{Tool Usage}
 The code of the tool is publicly available on the repository \url{https://github.com/LarsStegeman/EthereumRuntimeMonitoring}. Instructions on how to use the tool on other contracts can be seen in the README.
 
@@ -576,6 +610,7 @@ switched on. They can be found in
 parsing. The boolean \texttt{STOPONERROR} makes it so that the tool does
 not stop on the first error it encounters.
 
+\newpage
 \section{Case study}
 % \begin{itemize}
 %   \item Take contract that has vulnerability and add annotations
@@ -619,6 +654,7 @@ The complete generated code can be seen below.
 
 Note that the functionality of this contract is exactly the same as the previous code but with extra checks. This means that this approach is only feasible for development purposes. Since the gas cost of executing the previous contract is much lower then that of the runtime monitored contract. Also the more addresses that get added to the iterable map the more gas the transaction will consume.
 
+\subsubsection{Testing the contract}
 
 \subsection{Vulnerable Contract}
 The next example is a simple contract with a vulnerability. The vulnerability will not be easily visible when reading the contract, but with extra annotations added this is visible. This contract is not actually in use but is based on a CryptoRoulette contract \footnote{https://github.com/misterch0c/Solidlity-Vulnerable/blob/master/honeypots/CryptoRoulette.sol}. Most of the contract code is omitted for this example. The idea is that the contract keeps a list of messages, for each message the sender and the message are saved. Only the address \texttt{admin} has extra privileges to possibly delete messages or delete the contract (these functions are not in the snippet).
@@ -633,7 +669,9 @@ The annotation that is added to the function \texttt{logMessage} checks the basi
 The code that is generated stores the original variables in memory before calling the function body. After the function is executed the old variables will be compared to the current state variables. Every call to the function \texttt{logMessage} will report an error since each time the state variables \texttt{admin} and \texttt{nrOfMessages} are changed. These are changed because the struct \texttt{message} within the function body defaults to \texttt{storage}. 
 \lstinputlisting[language=Solidity, breaklines= true, tabsize = 2, literate={\ \ }{{\ }}1]{examples/VulnerableContract_generated.sol}
 
+\subsubsection{Testing the contract}
 
+\newpage
 \section{Related Work}
 \label{sec:RelatedWork}
 There is a lot of work related to this topic. Ethereum is not the only blockchain platform that supports the deployment of smart contracts, but this section will focus on the development and research for the Ethereum blockchain specifically. There are papers discussing the verification of smart contracts. They can be further categorized as static analysis or formal verification. Additionally other contract languages have been proposed to help writing secure smart contracts. The last subsection discusses some other related work.
@@ -672,6 +710,7 @@ FSolidM \cite{mavridou2018tool} is a fully functional tool which helps developin
 \subsubsection{Quantitative Analysis of Smart Contracts}
 Chatterjee et al. \cite{chatterjee2018quantitative} analyse the utility (expected payout) for smart contracts. It does so by using game theory and incentives to analyse a stateful game. It uses a simplified contract language and translates these contracts to state-based games. These games can then be analysed by the tool for their expected payout. The functions in the games are assumed to be executed at distinct timeslots. This is however not the case for Ethereum since one can always write a specific contract to call all functions within the same transaction. Also calls to other contracts are not considered while this is where most of the complexity and vulnerabilities are discovered in real world contracts.
 
+\newpage
 \section{Conclusion}
 
 \subsection{Future work}
@@ -680,7 +719,7 @@ Chatterjee et al. \cite{chatterjee2018quantitative} analyse the utility (expecte
   \item The tool does not have a mechanism for exposing the parse tree for other programs after validation.
 \end{itemize}
 
-
+\newpage
 \bibliographystyle{IEEEtran}
 \bibliography{IEEEfull,references}
 \end{document}
