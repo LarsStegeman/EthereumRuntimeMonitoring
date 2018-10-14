@@ -47,13 +47,27 @@ dr. M.H. Everts, University of Twente\\
 
 \newpage
 \section{Abstract}
-In this paper the tool Solitor is presented. Solitor can parse and translate annotations in Solidity contracts to generated Solidity code which checks the expressions at runtime. To recognize the annotations the original Solidity grammar is extended and is similar to that of JML. The rest of this paper explains the background of the Ethereum network and how smart contract execute on the blockchain. Furthermore the tool is tested on two case studies of smart contracts. 
+In this paper the tool Solitor is presented. Solitor is short for Solidity (runtime) monitor. It is a tool developed specifically for smart contracts on the Ethereum network. Solitor can parse and translate annotations in Solidity contracts to generated Solidity code which checks the expressions at runtime. Annotations can be used to check if certain properties hold during execution of the smart contract. These can either be contract invariants or pre and postconditions for methods. To recognize the annotations the original Solidity grammar is extended and is similar to that of the Java Modelling Language (JML). \par
+The rest of this paper explains the background of the Ethereum network and how smart contract execute on the blockchain. This is important because smart contracts are committed to the blockchain. This means they are public and unchangeable. Ensuring the contract executed like intended is important because vulnerabilities can not be easily solved. Furthermore the report describes two case studies, where the tool is used to specify correct behaviour or detect a vulnerability. 
 \newpage
 \tableofcontents
 \newpage
 
 \section{Introduction}
-This research will try to answer the following questions:
+Ethereum is a well known blockchain based cryptocurrency. In contrast to Bitcoin it is more focussed to be a smart contract platform. On this platform applications will run without any trusted central party. This makes these applications unstoppable and censorship resistant. Each day new smart contracts are deployed to the Ethereum network. Some of these smart contracts control a large sum of ether. Since this ether has real world value and the source code for smart contracts is in the open many people are finding vulnerabilities within contracts. Several high profile security bugs were found and exploited \cite{parity1, parity2,hkg,dao}. This sparked the interest in static analysis tools and formal verification of smart contracts. Many different analysis tools have already been developed. Static analysis tools can be executed on many contracts and detect mistakes by analysing known vulnerable patterns. Other tools which use formal verification need a specification to be able to guarantee a contract behaves the correct way. These specifications are usually written in another language or defined at the EVM level. This makes it hard to understand what properties are proven and what that means for the contract. More examples of tools can be found in Section \ref{sec:RelatedWork}. 
+
+\subsection{Goal}
+The goal of this research is to develop a tool that can do runtime verification for smart contracts. The annotations to check properties can be written at the level of Solidity. This will make it easy for Solidity developers to use the tool. Furthermore the specification does not have to be complete and proven correctly against all specifications like in the case of formal verification tools. This makes it easy to check for certain properties without having to specify all the behaviour. The generated code will be Solidity which can be executed on the blockchain like any normal contract. The tool will be made specifically for the language Solidity and for the Ethereum blockchain.
+The benefits of this approach are:
+\begin{itemize}
+  \item Explicitly writing a specification helps understanding the problem. The code usually describes how a contract should behave and do calculations. While the specification should describe what the contract does and what properties should be satisfied.
+  \item Runtime exceptional state. While the contract is active on the main Ethereum network properties can be checked at runtime. If a certain property fails due to an untested case, the program can go into an exceptional state. In this state, functions can be deactivated or the contract can be completely cleared. Some special form of governance can be coded in this state which requires human intervention before the contract will continue.
+  \item The annotations can be used by static analysis tools for other purposes.
+\end{itemize}
+
+\subsection{Research Questions}
+A runtime verification tool for smart contracts has to be usuable in the environment it will be used. The properties it can specify must be implementable in Solidity. This settings is much different from a normal general purpose programming language. For example the seperation of storage and memory is different. Contracts have to be annotated with a certain syntax. This syntax has to be designed in such a way that it is understandable and usable. Furthermore the usability of the tool as a whole should be tested on a case study of a smart contract.
+More concrete the following questions are answered in this report:
 \begin{enumerate}
 \item \textbf{Property specification/definition.}
 The first step is to decide and analyse which properties should be able to be checked and specified. Properties should make sense and should be able to be checked within Solidity. This raises the question:
@@ -64,8 +78,11 @@ The next step is defining the output of the tool. In other words: \textit{What c
 The last step is to test the tool on real world smart contract. And see if it can detect vulnerabilities that would otherwise have not been found. \textit{How can the tool be used to detect vulnerabilities in smart contracts?}.
 \end{enumerate}
 
+\subsection{Report Structure}
+This report will answer the above questions and introduce the tool Solitor. Before that some background information is given in Section \ref{sec:background}. This introduces the setting in which these smart contracts are executed. It explains the workings of the blockchain in combination of the executed code. The network state and contract state is explained in detail. Next the language Solidity is introduced in section \ref{sec:solidity}. This is the programming language that is most used to develop smart contracts on the Ethereum network. It compiles to the EVM (Ethereum Virtual machine) bytecode and is specifically designed for developing contracts. The language is introduced so that the design decisions for the tool can be understood. Section \ref{sec:tooloverview} discusses the tool in a high level overview. The next sections \ref{sec:annotationlanguage}-\ref{sec:generation} discuss the different phases in the tool process. Some of the limitations within Solitor are discussed in Section \ref{sec:limitations}. The tool is tested on two case studies. The first case study is a contract which models a subcurrency. This is called a token and many applications use such contract. The contract SimpleToken is a simplified version and a property is implemented and checked at runtime. The second case study is a contract which contains a vulnerability. The vulnerability is exposed using annotations. When executing the contract with annotations the vulnerability becomes visible and execution of the transaction is stopped. This can be seen in detail in Section \ref{sec:casestudy}. As said in the introduction many tools try to make smart contract development more secure. There are many approaches each focussing on a specific aspect of secure smart contracts. The different approaches and vulnerabilities they detect are discussed in Section \ref{sec:RelatedWork}. Lastly the conclusion of the report can be seen inSection \ref{sec:conclusion}. It briefly answers the questions asked in this introduction and discusses the results of Solitor. 
 \newpage
 \section{Background}
+\label{sec:background}
 This section will discuss the background information that will be built upon further in the document. First we will briefly discuss the important parts of the Ethereum Blockchain. Then we will discuss the smart contracts in more detail.
 \subsection{The Ethereum blockchain}
 The Ethereum platform is built upon a distributed public ledger. On this ledger the cryptocurrency ether is stored. Ethereum has different denominations of the unit ether. The smallest value or base value is called \texttt{wei}, a single ether represents 1e18 wei. In contrast to Bitcoin, it is an account based system and not based on unspent transaction outputs (UTXO). There are two types of accounts, one is a default account in which a user controls the spending of funds through its private keys. These accounts are called "Externally owned Accounts". An account can be referenced by its address which is a hashed version of the public key. Each address has a balance and a nonce. The nonce is incremented each time the balance is updated with a transaction. The other option is a "Contract Account", which means that it is managed by code only. A contract account has more data stored on the blockchain. These include storage hash and a code field. The code is set when the contract is constructed and initialized on the blockchain, and after that can never be changed. The code that is included in contracts is called Ethereum Byte Code. This bytecode is executed in a VM called the Ethereum Virtual Machine (EVM). Each contract has a persistent storage which is also maintained on the blockchain. Contract accounts only execute code when they are called from other contracts.\par
@@ -220,6 +237,7 @@ All these transfer functions can be sent to "Externally Owned Contracts", but al
 
 \newpage
 \section{Tool Overview}
+\label{sec:tooloverview}
 % \begin{itemize}
 %   \item Tool works in two phases validation and generation.
 %   \item Validation typechecks and checks if annotations are well formed according to grammar.
@@ -612,6 +630,7 @@ not stop on the first error it encounters.
 
 \newpage
 \section{Case study}
+\label{sec:casestudy}
 % \begin{itemize}
 %   \item Take contract that has vulnerability and add annotations
 %   \item Show parts of generated code that will throw an event.
@@ -712,6 +731,7 @@ Chatterjee et al. \cite{chatterjee2018quantitative} analyse the utility (expecte
 
 \newpage
 \section{Conclusion}
+\label{sec:conclusion}
 
 \subsection{Future work}
 \begin{itemize}
