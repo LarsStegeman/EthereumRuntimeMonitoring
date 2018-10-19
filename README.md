@@ -1,6 +1,5 @@
-# Ethereum Runtime Verification
-
-One Paragraph of project description goes here
+# Solitor -  Ethereum Runtime Verification
+Solitor is short for Solidity (runtime) monitor. It is a tool developed specifically for smart contracts on the Ethereum network. Solitor can parse and translate annotations in Solidity contracts to generated Solidity code which checks the expressions at runtime. Annotations can be used to check if certain properties hold during execution of the smart contract. These can either be contract invariants or pre and postconditions for methods. To recognize the annotations the original Solidity grammar is extended and is similar to that of the Java Modelling Language (JML).
 
 ## Getting Started
 
@@ -9,6 +8,7 @@ One Paragraph of project description goes here
 - Java 1.8
 - Maven 3.5.3
 - ANTLR 4 (Maven will get this automatically when installing)
+- Truffle (to run the blockchain tests)
 
 ### Installing
 

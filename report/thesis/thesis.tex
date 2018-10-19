@@ -639,7 +639,7 @@ not stop on the first error it encounters.
 %   \item Show difference in gas usage?
 %   \item Show how forall annotations are handled (example contract of minimal token).
 % \end{itemize}
-In this section we present two case studies of smart contracts. These smart contracts will be annotated and the tool will generate the contract code with extra checks added to the code. The first example is a minimal token implementation. The second example is a contract with a vulnerability which we will show can be detected with the correct annotations.
+In this section we present two case studies of smart contracts. These smart contracts will be annotated and the tool will generate the contract code with extra checks added to the code. The generated contracts are then tested using the truffle framework \cite{truffleframework}. This makes it able to generate transactions and execute them on a local temporary blockchain. A few transactions will be used to detect the vulnerability or show that contract behaves correctly. The first example is a minimal token implementation. The second example is a contract with a vulnerability which we will show can be detected with the correct annotations.
 
 \subsection{SimpleToken}
 In this example we will use the contract SimpleToken. The contract code can be found on the Ethereum Foundation website\footnote{\url{https://www.ethereum.org/token}}. 
@@ -676,6 +676,18 @@ The complete generated code can be seen below.
 Note that the functionality of this contract is exactly the same as the previous code but with extra checks. This means that this approach is only feasible for development purposes. Since the gas cost of executing the previous contract is much lower then that of the runtime monitored contract. Also the more addresses that get added to the iterable map the more gas the transaction will consume.
 
 \subsubsection{Testing the contract}
+To execute the transactions on the contract you need the truffle test suite. The test cases are located in \href{https://github.com/LarsStegeman/EthereumRuntimeMonitoring/blob/master/src/test/test_SimpleToken_generated.js}{test\_SimpleToken\_generated.js}.
+The test transactions do the following in this order:
+\begin{enumerate}
+  \item Create contract, constructor is called with 1000 initial supply and gets assigned to creator account.
+  \item Send 100 tokens from account 1 to account 2.
+  \item Send 10 tokens from account 1 to account 3.
+  \item Send 100 tokens from account 2 to account 1.
+  \item Send 100 tokens from account 1 to account 1 (transfer to self).
+  \item Send 1000 tokens from account 1 to account 3. This should fail since the balance of account 1 is lower then 1000.
+\end{enumerate}
+The test cases can be executed with the command \texttt{truffle test}. Since this uses the runtime monitored contract code, each time the annotations are checked aswell. This ensures that the rest of the balances does not change when a transfer is done between account 1 and 2. The test are executed and all succeed. \par
+ this is because this implementation does not contain a vulnerability. The HKG token however has a vulnerability which meant that 
 
 \subsection{Vulnerable Contract}
 The next example is a simple contract with a vulnerability. The vulnerability will not be easily visible when reading the contract, but with extra annotations added this is visible. This contract is not actually in use but is based on a CryptoRoulette contract \footnote{https://github.com/misterch0c/Solidlity-Vulnerable/blob/master/honeypots/CryptoRoulette.sol}. Most of the contract code is omitted for this example. The idea is that the contract keeps a list of messages, for each message the sender and the message are saved. Only the address \texttt{admin} has extra privileges to possibly delete messages or delete the contract (these functions are not in the snippet).
@@ -691,6 +703,13 @@ The code that is generated stores the original variables in memory before callin
 \lstinputlisting[language=Solidity, breaklines= true, tabsize = 2, literate={\ \ }{{\ }}1]{examples/VulnerableContract_generated.sol}
 
 \subsubsection{Testing the contract}
+To execute the transactions on the contract you need the truffle test suite. The test cases are located in \href{https://github.com/LarsStegeman/EthereumRuntimeMonitoring/blob/master/src/test/test_VulnerableContract_generated.js}{test\_VulnerableContract\_generated.js}.
+The test transactions do the following in this order:
+\begin{enumerate}
+  \item Create contract, admin set to the creator of the contract.
+  \item Send transaction to log function with message "test".
+\end{enumerate}
+The test cases can be executed with the command \texttt{truffle test}. Since this uses the runtime monitored contract code, each time the annotations are checked aswell. This ensures that when executing the function \texttt{log} the address of the admin does not change, and that the number of stored messages gets increased by one. However we know that this contract contains a vulnerability and the admin address will change because of the function call. This causes the transaction to revert because the assertion in the annotation will fail. This error is caught by the test, and thus this test succeeds.
 
 \newpage
 \section{Related Work}
