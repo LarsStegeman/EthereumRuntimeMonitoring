@@ -50,7 +50,7 @@
         <configuration>
           <mainClass>SolidityAnnotation</mainClass>
           <arguments>
-          <argument>src/test/contracts/SimpleToken.sol</argument>
+          <argument>src/test/contracts/SimpleExample.sol</argument>
           </arguments>
         </configuration>
       </plugin>
